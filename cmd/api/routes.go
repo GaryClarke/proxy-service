@@ -7,7 +7,7 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /healthcheck", app.healthcheckHandler)
-	//mux.HandleFunc("POST /webhook", app.webhookHandler)
+	mux.HandleFunc("POST /webhook", app.webhookHandler)
 
 	return mux
 }
