@@ -26,6 +26,11 @@ func TestHealthcheckHandler(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
 	}
 
+	// Check the Content-Type header.
+	if contentType := w.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Errorf("expected Content-Type application/json, got %s", contentType)
+	}
+
 	// Define expected JSON as a map
 	expected := map[string]string{
 		"status":      "available",
