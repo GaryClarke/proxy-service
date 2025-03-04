@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -27,7 +28,8 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 func newTestApplication(t *testing.T) *application {
 	return &application{
 		config: config{env: "testing"},
-		logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		//logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		logger: slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
 }
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"github.com/garyclarke/proxy-service/internal/webhook"
 	"net/http"
 )
 
@@ -28,7 +30,17 @@ func (app *application) webhookHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err := app.writeJSON(w, http.StatusNoContent, nil, nil)
+	// Decode the JSON request body into a Webhook struct.
+	var wh webhook.Webhook
+
+	err := json.NewDecoder(r.Body).Decode(&wh)
+	if err != nil {
+		app.logger.Error("failed to decode request body", "error", err)
+		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusNoContent, nil, nil)
 	if err != nil {
 		app.logger.Error(err.Error())
 		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
