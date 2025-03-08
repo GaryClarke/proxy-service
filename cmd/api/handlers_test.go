@@ -49,7 +49,7 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 		// Optionally, expected error message etc.
 	}{
 		{
-			name:           "Subscription Start - Initial Buy, not in trial",
+			name:           "Subscription Start|Initial Buy|Not in trial",
 			payload:        getPayload("SUBSCRIBED", "INITIAL_BUY", "false", 1, "100000123456789", "uk.co.bbc.goodfood2"),
 			expectedStatus: http.StatusNoContent,
 			// expectedIdentify: expectedIdentifySubStartModel(true), // Your helper function

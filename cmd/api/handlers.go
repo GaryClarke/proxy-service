@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/garyclarke/proxy-service/internal/webhook"
 	"net/http"
 )
@@ -31,8 +30,7 @@ func (app *application) webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decode the JSON request body into a Webhook struct.
 	var wh webhook.Webhook
-
-	err := json.NewDecoder(r.Body).Decode(&wh)
+	err := app.readJSON(w, r, &wh)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusUnprocessableEntity, err.Error())
 		return
