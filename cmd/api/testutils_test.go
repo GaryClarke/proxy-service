@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -24,11 +25,20 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 
 // newTestApplication returns an instance of the
 // application struct containing mocked dependencies.
-func newTestApplication(t *testing.T) *application {
+func newTestApplication(t *testing.T, debug bool) *application {
+	var logger *slog.Logger
+	if debug {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	} else {
+		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+
 	return &application{
-		config: config{env: "testing"},
-		logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
-		//logger: slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		config: config{
+			env:       "testing",
+			debugMode: debug,
+		},
+		logger: logger,
 	}
 }
 

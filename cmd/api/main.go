@@ -15,8 +15,9 @@ const version = "1.0.0"
 
 // Define a config struct to hold all the configuration settings for the application.
 type config struct {
-	port int
-	env  string
+	port      int
+	env       string
+	debugMode bool
 }
 
 // Define an application struct to hold the dependencies for our HTTP handlers, helpers,

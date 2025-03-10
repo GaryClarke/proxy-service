@@ -11,7 +11,7 @@ import (
 
 func TestHealthcheckHandler(t *testing.T) {
 	// Create a new instance of our application struct.
-	app := newTestApplication(t)
+	app := newTestApplication(t, false)
 
 	// create a new test server
 	ts := newTestServer(t, app.routes())
@@ -58,7 +58,7 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 	}
 
 	// Create your test server using the application's routes.
-	app := newTestApplication(t)
+	app := newTestApplication(t, false)
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
 

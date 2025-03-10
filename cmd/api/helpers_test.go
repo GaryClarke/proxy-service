@@ -11,7 +11,7 @@ import (
 )
 
 func TestWriteJSON(t *testing.T) {
-	app := newTestApplication(t)
+	app := newTestApplication(t, false)
 
 	// ResponseRecorder captures the response.
 	rr := httptest.NewRecorder()
@@ -51,7 +51,7 @@ type testReadStruct struct {
 }
 
 func TestReadJSON(t *testing.T) {
-	app := newTestApplication(t)
+	app := newTestApplication(t, false)
 
 	tests := []struct {
 		name          string
