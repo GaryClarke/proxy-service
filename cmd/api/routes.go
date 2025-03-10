@@ -9,5 +9,6 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /healthcheck", app.healthcheckHandler)
 	mux.HandleFunc("POST /webhook", app.webhookHandler)
 
-	return mux
+	// Wrap the mux with the middleware
+	return app.recoverPanic(mux)
 }
