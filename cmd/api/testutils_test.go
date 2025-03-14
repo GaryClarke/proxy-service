@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/garyclarke/proxy-service/internal/webhook/handler"
 	"io"
 	"log/slog"
 	"net/http"
@@ -38,7 +39,8 @@ func newTestApplication(t *testing.T, debug bool) *application {
 			env:       "testing",
 			debugMode: debug,
 		},
-		logger: logger,
+		logger:           logger,
+		handlerDelegator: handler.NewHandlerDelegator(),
 	}
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/webhook/handler"
 	"log/slog"
 	"net/http"
 	"os"
@@ -23,8 +24,9 @@ type config struct {
 // Define an application struct to hold the dependencies for our HTTP handlers, helpers,
 // and middleware.
 type application struct {
-	config config
-	logger *slog.Logger
+	config           config
+	logger           *slog.Logger
+	handlerDelegator *handler.Delegator
 }
 
 func main() {
@@ -43,8 +45,9 @@ func main() {
 	// Declare an instance of the application struct, containing the config struct and
 	// the logger.
 	app := &application{
-		config: cfg,
-		logger: logger,
+		config:           cfg,
+		logger:           logger,
+		handlerDelegator: handler.NewHandlerDelegator(),
 	}
 
 	// Declare a HTTP server which listens on the port provided in the config struct,

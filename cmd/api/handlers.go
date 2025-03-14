@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/garyclarke/proxy-service/internal/webhook"
 	"net/http"
 )
@@ -28,6 +29,11 @@ func (app *application) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.errorResponse(w, r, http.StatusUnprocessableEntity, err.Error())
 		return
+	}
+
+	err = app.handlerDelegator.Delegate(context.Background(), wh)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
 	}
 
 	err = app.writeJSON(w, http.StatusNoContent, nil, nil)
