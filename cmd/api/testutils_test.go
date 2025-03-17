@@ -34,13 +34,18 @@ func newTestApplication(t *testing.T, debug bool) *application {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 
+	// Initialize the WebhookHandlers and initialize the delegator
+	appleHandler := handler.NewAppleHandler()
+
+	handlerDelegator := handler.NewHandlerDelegator(appleHandler)
+
 	return &application{
 		config: config{
 			env:       "testing",
 			debugMode: debug,
 		},
 		logger:           logger,
-		handlerDelegator: handler.NewHandlerDelegator(),
+		handlerDelegator: handlerDelegator,
 	}
 }
 

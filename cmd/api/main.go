@@ -42,12 +42,14 @@ func main() {
 	// stream.
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
+	appleHandler := handler.NewAppleHandler()
+
 	// Declare an instance of the application struct, containing the config struct and
 	// the logger.
 	app := &application{
 		config:           cfg,
 		logger:           logger,
-		handlerDelegator: handler.NewHandlerDelegator(),
+		handlerDelegator: handler.NewHandlerDelegator(appleHandler),
 	}
 
 	// Declare a HTTP server which listens on the port provided in the config struct,
