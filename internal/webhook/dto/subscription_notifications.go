@@ -1,6 +1,14 @@
 package dto
 
-// Subscription represents the Apple subscription details extracted from the webhook payload.
+// SubscriptionPayload mirrors the nested structure of the inner payload.
+type SubscriptionPayload struct {
+	Payload struct {
+		Subscription Subscription `json:"subscription"`
+	} `json:"payload"`
+}
+
+// Subscription represents the subscription details extracted from the webhook payload.
+// Sub notes nests everything related to the subscription inside here
 type Subscription struct {
 	Properties            SubscriptionProperties `json:"properties"`
 	EventTimeMillis       int64                  `json:"eventTimeMillis"`
