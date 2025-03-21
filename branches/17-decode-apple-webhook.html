@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Decoding Apple Webhook Payloads</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Decoding Apple Webhook Payloads</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch focuses on the ability to decode the webhook payload into a normalized <code>Subscription</code> struct. The work centers on parsing the nested JSON data (as sent by the subnotifications service) and mapping it into a well-structured model. Additionally, the branch lays the foundation for integrating brand information.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Subscription Struct Update</h3>
+<ul>
+    <li>
+        Added a new <code>Brand</code> field to the <code>Subscription</code> struct.
+    </li>
+    <li>
+        Defined as a pointer to <code>brand.Brand</code> and tagged with <code>json:"-"</code> to exclude it from JSON encoding/decoding since it's computed internally.
+    </li>
+    <li>
+        <strong>Code Example:</strong>
+        <pre><code>type Subscription struct {
+    Properties            SubscriptionProperties `json:"properties"`
+    EventTimeMillis       int64                  `json:"eventTimeMillis"`
+    DeveloperNotification *DeveloperNotification `json:"developerNotification"`
+    SubscriptionPurchase  *SubscriptionPurchase  `json:"subscriptionPurchase"`
+    JwsRenewalInfo        *JwsRenewalInfo        `json:"jwsRenewalInfo"`
+    JwsTransaction        *JwsTransaction        `json:"jwsTransaction"`
+    ServerData            *ServerData            `json:"serverData"`
+    AirshipClaim          *string                `json:"airshipClaim"`
+    AirshipChannelID      *string                `json:"airshipChannelId"`
+    Brand                 *brand.Brand           `json:"-"`
+}</code></pre>
+    </li>
+</ul>
+
+<h3>2. Brand Package Integration</h3>
+<ul>
+    <li>
+        Created a dedicated <code>brand</code> package (located in the internal folder) to encapsulate the logic for determining a brand from a platform-specific identifier.
+    </li>
+    <li>
+        Implemented a function (<code>FromPlatformBrandID</code>) that maps bundle IDs to the corresponding brand values, mirroring the PHP behavior where the brand is derived using a static method.
+    </li>
+</ul>
+
+<h3>3. Decoding and Enrichment Logic</h3>
+<ul>
+    <li>
+        Updated the subscription decoder to extract the inner payload from the webhook, decode it into a normalized <code>Subscription</code> struct, and then enrich it by assigning a brand.
+    </li>
+    <li>
+        The enrichment logic checks if <code>JwsTransaction</code> is present and uses its <code>BundleID</code> to derive the brand.
+    </li>
+    <li>
+        Ensures that the subscription object contains consistent and normalized brand data for further processing.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Consistency:</strong> Normalizes subscription data across different platforms (Apple and Google) using a single <code>Subscription</code> struct. This is consistent with the Subscription Notifications equivalent.
+    </li>
+    <li>
+        <strong>Encapsulation:</strong> Keeps brand-specific logic isolated within its own package, ensuring a clean separation of concerns.
+    </li>
+</ul>
+
+</body>
+</html>
