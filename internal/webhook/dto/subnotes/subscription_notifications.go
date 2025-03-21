@@ -1,4 +1,6 @@
-package dto
+package subnotes
+
+import "github.com/garyclarke/proxy-service/internal/brand"
 
 // SubscriptionPayload mirrors the nested structure of the inner payload.
 type SubscriptionPayload struct {
@@ -19,6 +21,7 @@ type Subscription struct {
 	ServerData            *ServerData            `json:"serverData"`
 	AirshipClaim          *string                `json:"airshipClaim"`
 	AirshipChannelID      *string                `json:"airshipChannelId"`
+	Brand                 *brand.Brand           `json:"-"`
 }
 
 type DeveloperNotification struct {

@@ -2,8 +2,11 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/brand"
 	"github.com/garyclarke/proxy-service/internal/webhook"
+	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 )
 
 const AppleNotification = "AppleIAPNotification"
@@ -28,4 +31,19 @@ func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 	// TODO: create event struct
 	// TODO: forward the event
 	return nil
+}
+
+// DecodeSubscriptionWebhook decodes the inner JSON payload into a Subscription.
+// It expects the payload string to be in the format:
+// {"payload": {"subscription": { ... }}}
+func DecodeSubscriptionWebhook(payload string) (*subnotes.Subscription, error) {
+	var innerPayload subnotes.SubscriptionPayload
+	if err := json.Unmarshal([]byte(payload), &innerPayload); err != nil {
+		return nil, fmt.Errorf("the subscription payload could not be decoded. Reason: %w", err)
+	}
+
+	subscription := innerPayload.Payload.Subscription
+	subscription.Brand = brand.FromPlatformBrandID(subscription.JwsTransaction.BundleID)
+
+	return &subscription, nil
 }
