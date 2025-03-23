@@ -43,7 +43,15 @@ func DecodeSubscriptionWebhook(payload string) (*subnotes.Subscription, error) {
 	}
 
 	subscription := innerPayload.Payload.Subscription
-	subscription.Brand = brand.FromPlatformBrandID(subscription.JwsTransaction.BundleID)
+	if subscription.JwsTransaction == nil {
+		return nil, fmt.Errorf("missing JwsTransaction in subscription")
+	}
+
+	brandValue, err := brand.FromPlatformBrandID(subscription.JwsTransaction.BundleID)
+	if err != nil {
+		return nil, err
+	}
+	subscription.Brand = brandValue
 
 	return &subscription, nil
 }

@@ -1,6 +1,7 @@
 package assert
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -34,5 +35,13 @@ func NilFatalError(t *testing.T, actual error) {
 
 	if actual != nil {
 		t.Fatalf("got %v; expected: nil error", actual)
+	}
+}
+
+func NotNil(t *testing.T, actual any) {
+	t.Helper()
+	// Use reflect to catch cases where actual is a typed nil.
+	if actual == nil || (reflect.ValueOf(actual).Kind() == reflect.Ptr && reflect.ValueOf(actual).IsNil()) {
+		t.Errorf("expected non-nil value, got nil")
 	}
 }

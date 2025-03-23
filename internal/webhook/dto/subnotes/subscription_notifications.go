@@ -21,7 +21,7 @@ type Subscription struct {
 	ServerData            *ServerData            `json:"serverData"`
 	AirshipClaim          *string                `json:"airshipClaim"`
 	AirshipChannelID      *string                `json:"airshipChannelId"`
-	Brand                 *brand.Brand           `json:"-"`
+	Brand                 brand.Brand            `json:"-"`
 }
 
 type DeveloperNotification struct {
