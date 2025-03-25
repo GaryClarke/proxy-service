@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Decoding Webhook Payloads</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Test Decoding Webhook Payloads</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch focuses on adding the unit tests for decoding Apple webhook payloads and improving how brand information is retrieved.
+    The key changes include:
+</p>
+<ul>
+    <li>
+        Create a test utility to produce only the inner JSON payload (excluding outer meta).
+    </li>
+    <li>
+        Add the <code>FromPlatformBrandID</code> function in the brand package to return a mandatory <code>Brand</code> value (along with an error if unmatched).
+    </li>
+    <li>
+        Minor adjustments in the assertion package to add a <code>NotNil</code> helper, and clarifications on why pointers are used for some properties (e.g., nested fields that may be optional) while others are mandatory.
+    </li>
+</ul>
+
+<h2>Key Changes</h2>
+<h3>1. Test Payload Refactor</h3>
+<ul>
+    <li>
+        Created <code>BuildSubNotesPayload</code> to produce only the inner payload JSON structure.
+    </li>
+    <li>
+        The function takes parameters in this order:
+        <br>
+        <code>notificationType, subType, transactionId, brand, inTrial, autoRenewStatus</code>
+    </li>
+    <li>
+        The <code>inTrial</code> parameter is a <code>bool</code> (with format verb <code>%t</code>) for type safety.
+    </li>
+</ul>
+
+<h3>2. Brand Package</h3>
+<ul>
+    <li>
+        The <code>FromPlatformBrandID</code> function returns a non-pointer <code>Brand</code> and an error.
+        This makes the brand mandatory in the <code>Subscription</code> struct.
+    </li>
+    <li>
+        This ensures that if an unknown <code>bundleId</code> is encountered, the error is propagated and processing stops.
+    </li>
+</ul>
+
+<h3>3. Updates in the Decoder and Tests</h3>
+<ul>
+    <li>
+        The subscription decoder now checks for the presence of <code>JwsTransaction</code> to avoid nil pointer dereferences.
+    </li>
+    <li>
+        After decoding the inner payload, the decoder calls the updated <code>FromPlatformBrandID</code> to assign the mandatory brand.
+    </li>
+    <li>
+        The unit test (<code>TestDecodeSubscriptionWebhook_ValidPayload</code>) asserts not only that the brand is correctly set (e.g., <code>brand.GF</code>) but also validates key nested fields such as properties, <code>jwsTransaction</code>, <code>jwsRenewalInfo</code>, and <code>serverData</code>.
+    </li>
+</ul>
+
+<h3>4. Pointers and Optional Fields</h3>
+<ul>
+    <li>
+        In the <code>Subscription</code> struct, some fields (such as <code>DeveloperNotification</code> or <code>ServerData</code>) remain pointers, reflecting their optional nature in the payload.
+    </li>
+    <li>
+        However, the <code>Brand</code> field is now mandatory and is stored as a value, ensuring that every decoded subscription includes valid brand information.
+    </li>
+    <li>
+        The assertion helpers have been updated to handle nil checks where appropriate.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Separation of Concerns:</strong>
+        The payload generator isolates the inner payload structure, making unit testing the decoder straightforward while leaving feature tests to handle the full payload.
+    </li>
+    <li>
+        <strong>Type Safety:</strong>
+        Changing <code>inTrial</code> to a boolean and enforcing a mandatory brand value improves reliability and correctness in data processing.
+    </li>
+    <li>
+        <strong>Error Handling:</strong>
+        Returning an error for unknown platform brand IDs ensures that processing stops when critical data is missing.
+    </li>
+</ul>
+
+</body>
+</html>

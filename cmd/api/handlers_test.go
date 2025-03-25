@@ -97,7 +97,7 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 	}
 }
 
-// BuildSubNotesPayload returns a JSON payload string for testing purposes.
+// getPayload returns a JSON payload string for testing purposes.
 func getPayload(
 	notificationType, subType, transactionId, brand string,
 	inTrial bool,
