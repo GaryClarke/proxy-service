@@ -25,8 +25,12 @@ func (h *AppleHandler) supports(wh webhook.Webhook) bool {
 }
 
 func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
-	fmt.Println("Apple handler processing webhook:", wh)
-	// TODO: decode into subscription struct
+	sub, err := DecodeSubscriptionWebhook(wh.Payload)
+	fmt.Println("Apple decoded payload:", sub)
+	if err != nil {
+		return err
+	}
+
 	// TODO: validate brand
 	// TODO: create event struct
 	// TODO: forward the event

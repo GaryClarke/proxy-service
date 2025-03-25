@@ -28,7 +28,7 @@ func BuildSubNotesPayload(
     "originalTransactionId": "%s",
     "version": "1.0"
   },
-  "eventTimeMillis": 1623936000000,
+  "eventTimeMillis": "1623936000000",
   "developerNotification": null,
   "subscriptionPurchase": null,
   "jwsRenewalInfo": {

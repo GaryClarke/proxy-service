@@ -13,7 +13,7 @@ type SubscriptionPayload struct {
 // Sub notes nests everything related to the subscription inside here
 type Subscription struct {
 	Properties            SubscriptionProperties `json:"properties"`
-	EventTimeMillis       int64                  `json:"eventTimeMillis"`
+	EventTimeMillis       string                 `json:"eventTimeMillis"`
 	DeveloperNotification *DeveloperNotification `json:"developerNotification"`
 	SubscriptionPurchase  *SubscriptionPurchase  `json:"subscriptionPurchase"`
 	JwsRenewalInfo        *JwsRenewalInfo        `json:"jwsRenewalInfo"`
