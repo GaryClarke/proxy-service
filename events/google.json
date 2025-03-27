@@ -1,0 +1,130 @@
+{
+    "purchased - trial:false": {
+        "name": "subscription_started",
+        "sub_status": "Subscriber",
+        "category": "CATEGORY_START",
+        "notification_type": "PURCHASED",
+        "sub_type": null,
+        "in_trial": false
+    },
+    "purchased - trial:true": {
+        "name": "subscription_started",
+        "sub_status": "First time subscriber",
+        "category": "CATEGORY_START",
+        "notification_type": "PURCHASED",
+        "sub_type": null,
+        "in_trial": true
+    },
+    "renewed - trial:n/a": {
+        "name": "subscription_renewed",
+        "sub_status": "Subscriber",
+        "category": "CATEGORY_RENEW",
+        "notification_type": "RENEWED",
+        "sub_type": null,
+        "in_trial": null
+    },
+    "on hold - trial:n/a": {
+        "name": "subscription_on_hold",
+        "sub_status": "On hold",
+        "category": "CATEGORY_RENEW",
+        "notification_type": "ON_HOLD",
+        "sub_type": null,
+        "in_trial": null
+    },
+    "paused - trial:n/a": {
+        "name": "subscription_paused",
+        "sub_status": "Paused",
+        "category": "CATEGORY_RENEW",
+        "notification_type": "PAUSED",
+        "sub_type": null,
+        "in_trial": null
+    },
+    "recovered - trial:false": {
+        "name": "subscription_reactivated",
+        "sub_status": "Reactivated",
+        "category": "CATEGORY_RENEW",
+        "notification_type": "RECOVERED",
+        "sub_type": null,
+        "in_trial": false
+    },
+    "recovered - trial:true": {
+        "name": "subscription_reactivated",
+        "sub_status": "Reactivated in trial",
+        "category": "CATEGORY_RENEW",
+        "notification_type": "RECOVERED",
+        "sub_type": null,
+        "in_trial": true
+    },
+    "restarted - trial:n/a": {
+        "name": "subscription_restarted",
+        "sub_status": "Subscriber",
+        "category": "CATEGORY_RENEW",
+        "notification_type": "RESTARTED",
+        "sub_type": null,
+        "in_trial": null
+    },
+    "cancelled - trial:false": {
+        "name": "subscription_cancelled",
+        "sub_status": "Cancelled",
+        "category": "CATEGORY_STOP",
+        "notification_type": "CANCELLED",
+        "sub_type": null,
+        "in_trial": false
+    },
+    "cancelled - trial:true": {
+        "name": "subscription_cancelled",
+        "sub_status": "Cancelled during trial",
+        "category": "CATEGORY_STOP",
+        "notification_type": "CANCELLED",
+        "sub_type": null,
+        "in_trial": true
+    },
+    "expired - trial:false": {
+        "name": "subscription_revoked",
+        "sub_status": "Expired",
+        "category": "CATEGORY_STOP",
+        "notification_type": "EXPIRED",
+        "sub_type": null,
+        "in_trial": false
+    },
+    "expired - trial:true": {
+        "name": "subscription_revoked",
+        "sub_status": "Expired during trial",
+        "category": "CATEGORY_STOP",
+        "notification_type": "EXPIRED",
+        "sub_type": null,
+        "in_trial": true
+    },
+    "revoked - trial:false": {
+        "name": "subscription_revoked",
+        "sub_status": "Expired",
+        "category": "CATEGORY_STOP",
+        "notification_type": "REVOKED",
+        "sub_type": null,
+        "in_trial": false
+    },
+    "revoked - trial:true": {
+        "name": "subscription_revoked",
+        "sub_status": "Expired during trial",
+        "category": "CATEGORY_STOP",
+        "notification_type": "REVOKED",
+        "sub_type": null,
+        "in_trial": true
+    },
+    "did_change_renewal_status - any subtype - trial:n/a": {
+        "name": "subscription_auto_renew_status_changed",
+        "sub_status": null,
+        "category": "CATEGORY_CHANGE",
+        "notification_type": "DID_CHANGE_RENEWAL_STATUS",
+        "sub_type": null,
+        "in_trial": null
+    },
+    "did_not_change_renewal_status - any subtype - trial:n/a": {
+        "name": "subscription_auto_renew_status_changed",
+        "sub_status": null,
+        "category": "CATEGORY_NO_CHANGE",
+        "notification_type": "DID_CHANGE_RENEWAL_STATUS",
+        "sub_type": null,
+        "in_trial": null
+    }
+}

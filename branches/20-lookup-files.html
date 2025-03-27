@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Static Event Lookup Files with Embedded JSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Static Event Lookup Files with Embedded JSON</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we introduce a new approach for managing subscription event lookup data by using static JSON files.
+    We create separate JSON files for Apple and Google events, which are embedded directly into our binary using the Go
+    <code>embed</code> package. This setup will allow us to easily retrieve and parse the correct lookup data based on the
+    provider name.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Directory and File Organization</h3>
+<ul>
+    <li>
+        Renamed the lookup folder to <code>events</code> at the top level.
+    </li>
+    <li>
+        Created two JSON files: <code>apple.json</code> and <code>google.json</code>, each containing the respective event lookup data.
+    </li>
+    <li>
+        Added a single <code>efs.go</code> file in the <code>events</code> folder to embed both files:
+        <pre><code>package events
+
+import "embed"
+
+//go:embed apple.json google.json
+var Data embed.FS</code></pre>
+    </li>
+</ul>
+
+<h3>2. Centralized Lookup Function</h3>
+<ul>
+    <li>
+        We plan to implement a function that accepts a provider name (e.g., "apple" or "google") and returns the corresponding
+        lookup data as a Go structure.
+    </li>
+    <li>
+        This centralizes access to our static event lookup data and ensures that both Apple and Google lookups are handled uniformly.
+    </li>
+</ul>
+
+<h3>3. Rationale for Using Embedded JSON</h3>
+<ul>
+    <li>
+        <strong>Readability and Maintainability:</strong>
+        JSON is widely recognized and easy to understand. Non-developers can review or update the lookup data without needing to understand Go code.
+    </li>
+    <li>
+        <strong>Simplicity:</strong>
+        With Go’s <code>embed</code> package, the JSON files are compiled into the binary, eliminating runtime file I/O and simplifying deployment.
+    </li>
+    <li>
+        <strong>Flexibility:</strong>
+        This approach allows us to easily add more lookup data files in the future (or even additional providers) without changing the core code.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Separation of Concerns:</strong>
+        Storing static lookup data in JSON files separates configuration data from application logic, making both easier to manage.
+    </li>
+    <li>
+        <strong>Consistency Across Environments:</strong>
+        Since the JSON files are embedded at compile time, tests and production code will use the same lookup data, ensuring consistency.
+    </li>
+    <li>
+        <strong>Ease of Updates:</strong>
+        Non-developers can update the JSON files as needed, and changes are compiled into the binary without requiring extensive code modifications.
+    </li>
+</ul>
+
+</body>
+</html>
