@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Embedded Lookup Files</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Embedded Lookup Files</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch introduces an embedded filesystem for managing our lookup data files. The JSON lookup files for both Apple and Google events are now compiled directly into the binary using Go’s <code>embed</code> package. Additionally, we reverted to using the <code>lookup</code> package name (as opposed to a generic <code>events</code> folder) to clearly distinguish static lookup data from event-related logic.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Embedded Filesystem for Lookup Data</h3>
+<ul>
+    <li>
+        Created a new <code>efs.go</code> file in the <code>lookup</code> package.
+    </li>
+    <li>
+        This file embeds <code>apple.json</code> and <code>google.json</code> into an <code>embed.FS</code> variable called <code>Data</code>.
+    </li>
+    <li>
+        <strong>Code Example:</strong>
+        <pre><code>package lookup
+
+import "embed"
+
+//go:embed apple.json google.json
+var Data embed.FS</code></pre>
+    </li>
+</ul>
+
+<h3>2. Simplified File Access</h3>
+<ul>
+    <li>
+        Because the <code>//go:embed</code> directive compiles the specified files into the binary, they are stored at the root of the embedded filesystem.
+    </li>
+    <li>
+        This means that when reading a file (e.g., using <code>lookup.Data.ReadFile("apple.json")</code>), you don't need to include any additional file path—only the file name is required.
+    </li>
+    <li>
+        This simplifies code that loads lookup data since the file paths are predetermined by the <code>//go:embed</code> directive.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Embed Package Benefits:</strong>
+        The <code>embed</code> package compiles assets into your binary at compile time, ensuring consistent access during both testing and production without runtime file I/O.
+    </li>
+    <li>
+        <strong>Simplicity:</strong>
+        With all files embedded at the root of the filesystem, lookup operations are as simple as referencing the file name (e.g., <code>"apple.json"</code>), reducing the need for additional path management.
+    </li>
+    <li>
+        <strong>Organization:</strong>
+        Using a dedicated <code>lookup</code> package for these static files improves code clarity and maintainability.
+    </li>
+</ul>
+
+</body>
+</html>
