@@ -19,7 +19,7 @@ func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {
 	)
 
 	// Decode the payload.
-	sub, err := DecodeSubscriptionWebhook(payload)
+	sub, err := decodeSubscriptionWebhook(payload)
 
 	// Assert
 	assert.NilFatalError(t, err)
@@ -48,7 +48,7 @@ func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {
 
 func TestDecodeSubscriptionWebhook_InvalidPayload(t *testing.T) {
 	invalidPayload := `{"invalid": "data"}`
-	_, err := DecodeSubscriptionWebhook(invalidPayload)
+	_, err := decodeSubscriptionWebhook(invalidPayload)
 	if err == nil {
 		t.Fatal("expected error for invalid payload, got nil")
 	}
