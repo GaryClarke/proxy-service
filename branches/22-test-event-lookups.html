@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Testing Event Lookups for Apple and Google</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Testing Event Lookups for Apple and Google</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch introduces comprehensive tests to verify the functionality of our event lookup system.
+    We validate that the lookup data for both Apple and Google is correctly loaded from the embedded JSON files,
+    parsed into Go data structures using composite keys, and contains the expected values.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. New Unit Tests for Lookup Data</h3>
+<ul>
+    <li>
+        Created tests in <code>events_test</code> that call <code>GetLookupData</code> for both "apple" and "google" providers.
+    </li>
+    <li>
+        The tests assert that the returned lookup map is non-nil and has the expected number of entries.
+    </li>
+    <li>
+        Specific composite keys (e.g. <code>"SUBSCRIBED|INITIAL_BUY|false"</code> for Apple and <code>"PURCHASED|null|false"</code> for Google) are verified to contain the correct event definitions.
+    </li>
+</ul>
+
+<h3>2. Composite Key Verification</h3>
+<ul>
+    <li>
+        The tests check that key fields such as <code>Name</code>, <code>Category</code>, and <code>SubStatus</code> match expected values.
+    </li>
+    <li>
+        Using composite keys (built from notification type, sub-type, and in_trial values) simplifies lookup logic by enabling direct map access with O(1) performance.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Embedded Data Consistency:</strong>
+        The tests ensure that the embedded lookup JSON files are correctly parsed into a map in Go and that the keys match our composite key format.
+    </li>
+    <li>
+        <strong>Performance:</strong>
+        Direct map lookups (O(1)) are used instead of iterative filtering (O(n)), which simplifies the lookup process.
+    </li>
+    <li>
+        <strong>Maintainability:</strong>
+        The use of a composite key format (e.g., <code>"SUBSCRIBED|INITIAL_BUY|false"</code>) centralizes lookup criteria and makes it easier to update or extend in the future.
+    </li>
+</ul>
+
+</body>
+</html>

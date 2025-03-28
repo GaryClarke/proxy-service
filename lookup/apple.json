@@ -1,5 +1,5 @@
 {
-    "subscribed - initial_buy - trial:false": {
+    "SUBSCRIBED|INITIAL_BUY|false": {
         "name": "subscription_started",
         "sub_status": "First time subscriber",
         "category": "CATEGORY_START",
@@ -7,7 +7,7 @@
         "sub_type": "INITIAL_BUY",
         "in_trial": false
     },
-    "subscribed - initial_buy - trial:true": {
+    "SUBSCRIBED|INITIAL_BUY|true": {
         "name": "subscription_started",
         "sub_status": "Trialist",
         "category": "CATEGORY_START",
@@ -15,7 +15,7 @@
         "sub_type": "INITIAL_BUY",
         "in_trial": true
     },
-    "offer redeemed - initial_buy - trial:false": {
+    "OFFER_REDEEMED|INITIAL_BUY|false": {
         "name": "subscription_started",
         "sub_status": "First time subscriber",
         "category": "CATEGORY_START",
@@ -23,7 +23,7 @@
         "sub_type": "INITIAL_BUY",
         "in_trial": false
     },
-    "offer redeemed - initial_buy - trial:true": {
+    "OFFER_REDEEMED|INITIAL_BUY|true": {
         "name": "subscription_started",
         "sub_status": "Trialist",
         "category": "CATEGORY_START",
@@ -31,7 +31,7 @@
         "sub_type": "INITIAL_BUY",
         "in_trial": true
     },
-    "subscribed - any subtype - trial:n/a": {
+    "SUBSCRIBED|null|null": {
         "name": "subscription_started",
         "sub_status": "Subscriber",
         "category": "CATEGORY_START",
@@ -39,7 +39,7 @@
         "sub_type": null,
         "in_trial": null
     },
-    "did renew - any subtype - trial:n/a": {
+    "DID_RENEW|null|null": {
         "name": "subscription_renewed",
         "sub_status": "Subscriber",
         "category": "CATEGORY_RENEW",
@@ -47,7 +47,7 @@
         "sub_type": null,
         "in_trial": null
     },
-    "renewal extended - any subtype - trial:n/a": {
+    "RENEWAL_EXTENDED|null|null": {
         "name": "subscription_renewed",
         "sub_status": "Subscriber",
         "category": "CATEGORY_RENEW",
@@ -55,7 +55,7 @@
         "sub_type": null,
         "in_trial": null
     },
-    "subscribed - resubscribe - trial:n/a": {
+    "SUBSCRIBED|RESUBSCRIBE|null": {
         "name": "subscription_renewed",
         "sub_status": "Subscriber",
         "category": "CATEGORY_RENEW",
@@ -63,7 +63,7 @@
         "sub_type": "RESUBSCRIBE",
         "in_trial": null
     },
-    "offer redeemed - resubscribe - trial:n/a": {
+    "OFFER_REDEEMED|RESUBSCRIBE|null": {
         "name": "subscription_renewed",
         "sub_status": "Subscriber",
         "category": "CATEGORY_RENEW",
@@ -71,7 +71,7 @@
         "sub_type": "RESUBSCRIBE",
         "in_trial": null
     },
-    "expired - voluntary - trial:false": {
+    "EXPIRED|VOLUNTARY|false": {
         "name": "subscription_cancelled",
         "sub_status": "Cancelled",
         "category": "CATEGORY_STOP",
@@ -79,7 +79,7 @@
         "sub_type": "VOLUNTARY",
         "in_trial": false
     },
-    "expired - voluntary - trial:true": {
+    "EXPIRED|VOLUNTARY|true": {
         "name": "subscription_cancelled",
         "sub_status": "Cancelled during trial",
         "category": "CATEGORY_STOP",
@@ -87,7 +87,7 @@
         "sub_type": "VOLUNTARY",
         "in_trial": true
     },
-    "expired - any subtype - trial:false": {
+    "EXPIRED|null|false": {
         "name": "subscription_revoked",
         "sub_status": "Expired",
         "category": "CATEGORY_STOP",
@@ -95,7 +95,7 @@
         "sub_type": null,
         "in_trial": false
     },
-    "expired - any subtype - trial:true": {
+    "EXPIRED|null|true": {
         "name": "subscription_revoked",
         "sub_status": "Expired during trial",
         "category": "CATEGORY_STOP",
@@ -103,7 +103,7 @@
         "sub_type": null,
         "in_trial": true
     },
-    "revoke - any subtype - trial:false": {
+    "REVOKE|null|false": {
         "name": "subscription_revoked",
         "sub_status": "Expired",
         "category": "CATEGORY_STOP",
@@ -111,7 +111,7 @@
         "sub_type": null,
         "in_trial": false
     },
-    "revoke - any subtype - trial:true": {
+    "REVOKE|null|true": {
         "name": "subscription_revoked",
         "sub_status": "Expired during trial",
         "category": "CATEGORY_STOP",
@@ -119,7 +119,7 @@
         "sub_type": null,
         "in_trial": true
     },
-    "did fail to renew - any subtype - trial:false": {
+    "DID_FAIL_TO_RENEW|null|false": {
         "name": "subscription_revoked",
         "sub_status": "Expired",
         "category": "CATEGORY_STOP",
@@ -127,7 +127,7 @@
         "sub_type": null,
         "in_trial": false
     },
-    "did fail to renew - any subtype - trial:true": {
+    "DID_FAIL_TO_RENEW|null|true": {
         "name": "subscription_revoked",
         "sub_status": "Expired during trial",
         "category": "CATEGORY_STOP",
@@ -135,7 +135,7 @@
         "sub_type": null,
         "in_trial": true
     },
-    "grace period expired - any subtype - trial:false": {
+    "GRACE_PERIOD_EXPIRED|null|false": {
         "name": "subscription_grace_period_expired",
         "sub_status": "Expired",
         "category": "CATEGORY_STOP",
@@ -143,7 +143,7 @@
         "sub_type": null,
         "in_trial": false
     },
-    "grace period expired - any subtype - trial:true": {
+    "GRACE_PERIOD_EXPIRED|null|true": {
         "name": "subscription_grace_period_expired",
         "sub_status": "Expired during trial",
         "category": "CATEGORY_STOP",
@@ -151,7 +151,7 @@
         "sub_type": null,
         "in_trial": true
     },
-    "did_change_renewal_status - any subtype - trial:n/a": {
+    "DID_CHANGE_RENEWAL_STATUS|null|null": {
         "name": "subscription_auto_renew_status_changed",
         "sub_status": null,
         "category": "CATEGORY_CHANGE",
