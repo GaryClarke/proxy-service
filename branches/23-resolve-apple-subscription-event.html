@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Resolve Apple Subscription Events</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Resolve Apple Subscription Events</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch introduces new functionality to resolve an Apple subscription event from a decoded subscription.
+    We implemented two key functions that generate composite lookup keys with fallback logic and then use those keys
+    to retrieve the corresponding event definition from the lookup data. Additionally, we extended the event structure
+    to include the full subscription data.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Composite Key Generation</h3>
+<ul>
+    <li>
+        Implemented <code>appleCompositeKeyCandidates</code> to generate a slice of composite keys. These keys are built
+        using:
+        <ul>
+            <li>The uppercase notification type from <code>sub.ServerData.NotificationType</code></li>
+            <li>The subscription sub_type (or "null" if missing) from <code>sub.ServerData.SubType</code></li>
+            <li>The boolean value of <code>sub.Properties.PromotionalOfferApplied</code> (formatted as "true" or "false")</li>
+        </ul>
+        <p>
+            The function returns candidate keys in order from the most specific to the most generic:
+        </p>
+        <pre><code>
+return []string{
+    fmt.Sprintf("%s|%s|%t", notifType, specificSubType, inTrial),
+    fmt.Sprintf("%s|null|%t", notifType, inTrial),
+    fmt.Sprintf("%s|%s|null", notifType, specificSubType),
+    fmt.Sprintf("%s|null|null", notifType),
+}
+      </code></pre>
+    </li>
+</ul>
+
+<h3>2. Resolving the Subscription Event</h3>
+<ul>
+    <li>
+        Created <code>resolveAppleSubscriptionEvent</code> (an unexported function) that iterates through the candidate
+        keys and returns the first matching <code>SubscriptionEvent</code> from the lookup map.
+    </li>
+    <li>
+        Since map values are not addressable in Go, a local copy is created so that the function can return a pointer.
+    </li>
+    <pre><code>
+func resolveAppleSubscriptionEvent(
+    sub *subnotes.Subscription,
+    lookupMap map[string]events.SubscriptionEvent,
+) (*events.SubscriptionEvent, error) {
+    candidates := appleCompositeKeyCandidates(sub)
+    for _, key := range candidates {
+        if event, ok := lookupMap[key]; ok {
+            eventCopy := event
+            return &eventCopy, nil
+        }
+    }
+    return nil, fmt.Errorf("no valid composite event found for subscription")
+}
+    </code></pre>
+</ul>
+
+<h3>3. Extending the Event Structure</h3>
+<ul>
+    <li>
+        Updated the <code>SubscriptionEvent</code> struct to include a <code>Subscription</code> field, which holds the
+        full subscription data. This field is tagged with <code>json:"-"</code> so it is not included in JSON marshalling.
+    </li>
+    <pre><code>
+type SubscriptionEvent struct {
+    Name             string                 `json:"name"`
+    SubStatus        *string                `json:"sub_status"`
+    Category         string                 `json:"category"`
+    NotificationType string                 `json:"notification_type"`
+    SubType          *string                `json:"sub_type"`
+    InTrial          *bool                  `json:"in_trial"`
+    Subscription     *subnotes.Subscription `json:"-"` // attached subscription data
+}
+    </code></pre>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Fallback Logic:</strong>
+        The candidate composite keys mimic the PHP filtering loops. They first use the actual values from the subscription;
+        if those do not match any lookup entry, the keys fall back to using "null" for sub_type or in_trial, providing a more
+        generic match.
+    </li>
+    <li>
+        <strong>Performance:</strong>
+        Composite key lookups offer constant-time (O(1)) performance, which is very efficient.
+        While our fallback mechanism checks several candidate keys, the overhead is minimal for our small dataset,
+        making this approach both efficient and straightforward compared to more complex filtering methods.
+    </li>
+
+    <li>
+        <strong>Readability and Maintainability:</strong>
+        Naming the function <code>resolveAppleSubscriptionEvent</code> (or a similar descriptive name) makes its purpose clear
+        to other developers without exposing internal composite key logic.
+    </li>
+</ul>
+
+</body>
+</html>

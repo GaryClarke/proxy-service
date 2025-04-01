@@ -3,17 +3,19 @@ package events
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"github.com/garyclarke/proxy-service/lookup"
 )
 
 // SubscriptionEvent represents the lookup data for a subscription event.
 type SubscriptionEvent struct {
-	Name             string  `json:"name"`
-	SubStatus        *string `json:"sub_status"`
-	Category         string  `json:"category"`
-	NotificationType string  `json:"notification_type"`
-	SubType          *string `json:"sub_type"`
-	InTrial          *bool   `json:"in_trial"`
+	Name             string                 `json:"name"`
+	SubStatus        *string                `json:"sub_status"`
+	Category         string                 `json:"category"`
+	NotificationType string                 `json:"notification_type"`
+	SubType          *string                `json:"sub_type"`
+	InTrial          *bool                  `json:"in_trial"`
+	Subscription     *subnotes.Subscription `json:"-"` // not marshalled to JSON
 }
 
 // GetLookupData reads the lookup file for the specified provider (e.g. "apple" or "google")
