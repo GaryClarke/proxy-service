@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Test Resolve Apple Subscription Event</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Test Resolve Apple Subscription Event</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we introduced unit tests for the <code>resolveAppleSubscriptionEvent</code> function.
+    This function is responsible for resolving the correct subscription event from the lookup map using a composite key
+    mechanism with fallback logic. The tests cover various scenarios including an exact match, fallbacks for sub_type and in_trial,
+    the most generic fallback, and a case where no matching event is found.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Table-Driven Testing Approach</h3>
+<ul>
+    <li>
+        We adopted a table-driven test style, which is idiomatic in Go. This approach is similar to using a data provider in
+        other languages and testing frameworks, allowing us to define multiple test cases in one place.
+    </li>
+    <li>
+        Each test case specifies:
+        <ul>
+            <li>A name for the scenario</li>
+            <li>A modification function to adjust the default subscription values</li>
+            <li>The expected event name</li>
+            <li>An expectation of whether an error should occur</li>
+        </ul>
+    </li>
+</ul>
+
+<h3>2. Testing Scenarios</h3>
+<ul>
+    <li>
+        <strong>Exact Match:</strong> The subscription has a sub_type of "initial_buy" and PromotionalOfferApplied set to true,
+        generating the composite key "SUBSCRIBED|INITIAL_BUY|true" and returning the exact event.
+    </li>
+    <li>
+        <strong>Fallback for Sub_Type:</strong> The sub_type is set to nil, forcing the lookup to use a generic key ("SUBSCRIBED|null|true").
+    </li>
+    <li>
+        <strong>Fallback for In_Trial:</strong> PromotionalOfferApplied is changed to false, so the lookup should use a key like
+        "SUBSCRIBED|INITIAL_BUY|null".
+    </li>
+    <li>
+        <strong>Generic Fallback:</strong> Both sub_type is nil and PromotionalOfferApplied is false, producing the key "SUBSCRIBED|null|null".
+    </li>
+    <li>
+        <strong>No Match:</strong> The notification type is changed to an unknown value, ensuring the function returns an error.
+    </li>
+</ul>
+
+<h3>3. Helper Functions for Pointers</h3>
+<ul>
+    <li>
+        We introduced helper functions (<code>PtrStr</code> and <code>PtrBool</code>) to simplify initializing pointer fields in our test cases.
+    </li>
+    <li>
+        Some fields in our event structures, such as <code>SubStatus</code> and <code>SubType</code>, are declared as pointer types. This allows us to distinguish between a field that is explicitly set to a value and one that is absent (i.e. <code>nil</code>).
+    </li>
+    <li>
+        In Go, you cannot take the address of a literal directly (for example, <code>&"initial_buy"</code> is not allowed). Instead, we use helper functions like:
+        <pre><code>
+// PtrStr returns a pointer to the given string.
+func PtrStr(s string) *string {
+    return &s
+}
+
+// PtrBool returns a pointer to the given bool.
+func PtrBool(b bool) *bool {
+    return &b
+}</code></pre>
+        These functions let us easily create pointer values from literals, keeping our test code concise and readable.
+    </li>
+</ul>
+
+<h2>Code Highlights</h2>
+<p>
+    The following snippet shows the candidate key generation and the resolve function:
+</p>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Maintainability:</strong> The table-driven approach groups test cases in a single, easy-to-read structure similar to data providers in other frameworks.
+    </li>
+    <li>
+        <strong>Fallback Logic:</strong> The tests verify that the composite key fallback mechanism behaves as expected, ensuring robustness in event resolution.
+    </li>
+    <li>
+        <strong>Clarity:</strong> By using helper functions for pointer values and descriptive test case names, the tests are easy to understand and extend.
+    </li>
+</ul>
+
+</body>
+</html>
