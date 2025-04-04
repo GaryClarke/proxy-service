@@ -56,6 +56,51 @@ func TestDecodeSubscriptionWebhook_InvalidPayload(t *testing.T) {
 	}
 }
 
+func TestCreateAppleEvent_Success(t *testing.T) {
+	// Set up default subscription data.
+	defaultNotif := "subscribed"
+	initialBuy := "initial_buy"
+	sub := &subnotes.Subscription{
+		ServerData: &subnotes.ServerData{
+			NotificationType: defaultNotif,
+			SubType:          testutil.PtrStr(initialBuy),
+		},
+		Properties: subnotes.SubscriptionProperties{
+			PromotionalOfferApplied: true,
+		},
+	}
+
+	// Call createAppleEvent, which now internally retrieves the lookup map.
+	event, err := createAppleEvent(sub)
+	assert.NilFatalError(t, err)
+	assert.NotNil(t, event)
+	assert.Equal(t, event.Name, "subscription_started")
+	assert.Equal(t, *event.SubStatus, "Trialist")
+	assert.Equal(t, event.Category, "CATEGORY_START")
+	assert.Equal(t, event.NotificationType, "SUBSCRIBED")
+	assert.Equal(t, *event.SubType, "INITIAL_BUY")
+	assert.NotNil(t, event.Subscription)
+}
+
+func TestCreateAppleEvent_NoMatch(t *testing.T) {
+	// Set up a subscription with a notification type that doesn't exist in the lookup data.
+	sub := &subnotes.Subscription{
+		ServerData: &subnotes.ServerData{
+			NotificationType: "nonexistent",
+			SubType:          testutil.PtrStr("initial_buy"),
+		},
+		Properties: subnotes.SubscriptionProperties{
+			PromotionalOfferApplied: true,
+		},
+	}
+
+	// Call createAppleEvent, expecting an error because no matching event is found.
+	_, err := createAppleEvent(sub)
+	if err == nil {
+		t.Fatal("expected error when no matching event is found, got nil")
+	}
+}
+
 func TestResolveAppleSubscriptionEvent(t *testing.T) {
 	// Define default values.
 	defaultNotif := "subscribed" // will be converted to uppercase by our candidate function.

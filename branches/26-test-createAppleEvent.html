@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Test Create Apple Event</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Test Create Apple Event</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch introduces comprehensive tests for the <code>createAppleEvent</code> function, which encapsulates
+    the logic for resolving an Apple subscription event from a decoded subscription. The tests verify that the correct event
+    is created based on various subscription inputs, and they ensure that the complete event—including the attached subscription—is correctly built.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Successful Event Creation Test</h3>
+<ul>
+    <li>
+        A default subscription is created with a notification type of "subscribed" and a sub_type of "initial_buy", with
+        <code>PromotionalOfferApplied</code> set to true.
+    </li>
+    <li>
+        The test calls <code>createAppleEvent</code>, which internally retrieves the lookup map for Apple events and resolves
+        the appropriate event definition using composite key fallback logic.
+    </li>
+    <li>
+        The test asserts that:
+        <ul>
+            <li>The event is not nil.</li>
+            <li>The event's <code>Name</code> equals "subscription_started".</li>
+            <li>The event's <code>SubStatus</code> is "Trialist".</li>
+            <li>The <code>Category</code> and <code>NotificationType</code> match expected values.</li>
+            <li>The <code>SubType</code> is "INITIAL_BUY".</li>
+            <li>The <code>Subscription</code> is attached to the event.</li>
+        </ul>
+    </li>
+</ul>
+
+<h3>2. No-Match Scenario Test</h3>
+<ul>
+    <li>
+        Another test creates a subscription with a notification type that does not exist in the lookup data ("nonexistent").
+    </li>
+    <li>
+        The test then asserts that <code>createAppleEvent</code> returns an error, ensuring that the function correctly handles cases
+        where no matching event is found.
+    </li>
+</ul>
+
+<h2>Testing Strategy</h2>
+<ul>
+    <li>
+        <strong>Isolation:</strong> The tests focus solely on the <code>createAppleEvent</code> function by providing controlled subscription input.
+    </li>
+    <li>
+        <strong>Direct Assertions:</strong> Specific assertions are made on event fields (like <code>Name</code>, <code>SubStatus</code>, etc.) to ensure that the composite key resolution and event enrichment are working as intended.
+    </li>
+</ul>
+
+<h2>Conclusion</h2>
+<p>
+    The tests confirm that the <code>createAppleEvent</code> function correctly resolves the appropriate event based on a subscription's
+    composite key, and gracefully handles scenarios where no event match is found. This solid foundation ensures robust event creation
+    logic for further processing.
+</p>
+
+</body>
+</html>
