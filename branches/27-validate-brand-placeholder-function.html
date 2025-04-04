@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Validate Brand Placeholder Function</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Validate Brand Placeholder Function</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we introduced a placeholder for brand validation and moved it into the <code>brand</code> package.
+    In the PHP version, brand validation involves calling an external settings API to verify that the brand is enabled.
+    For now, our <code>ValidateBrand</code> function simply returns <code>nil</code>, deferring the integration with the settings API to a later phase.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Moved Brand Validation to the Brand Package</h3>
+<ul>
+    <li>
+        In <code>brand/brand.go</code>, we added a placeholder function:
+        <pre><code>// ValidateBrand todo - add supported brand check later if required
+func ValidateBrand(brand Brand) error {
+    return nil
+}
+      </code></pre>
+    </li>
+    <li>
+        This function is intended to later check whether a brand is supported (e.g., via a settings API) but currently always returns <code>nil</code>.
+    </li>
+</ul>
+
+<h3>2. Integration in the Apple Handler</h3>
+<ul>
+    <li>
+        The <code>AppleHandler.handle</code> method now calls <code>brand.ValidateBrand</code> after decoding the subscription payload:
+        <pre><code>func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
+    sub, err := decodeSubscriptionWebhook(wh.Payload)
+    if err != nil {
+        return err
+    }
+
+    // Validate the brand (placeholder implementation).
+    err = brand.ValidateBrand(sub.Brand)
+    if err != nil {
+        return err
+    }
+
+    event, err := createAppleEvent(sub)
+    if err != nil {
+        return err
+    }
+    fmt.Println("Event:", event.Subscription)
+
+    // TODO: forward the event
+    return nil
+}
+      </code></pre>
+    </li>
+    <li>
+        This integration ensures that brand validation is part of the workflow.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Placeholder Implementation:</strong>
+        The <code>ValidateBrand</code> function currently does nothing (returns <code>nil</code>) but allows us to integrate brand checking into the workflow without blocking further development.
+    </li>
+    <li>
+        <strong>Future Integration:</strong>
+        When the actual brand validation logic is ready, it can be added to this function, ensuring that only enabled brands proceed through the event creation process.
+    </li>
+    <li>
+        <strong>Separation of Concerns:</strong>
+        Moving brand validation to its own function in the <code>brand</code> package keeps our code modular and easier to test.
+    </li>
+</ul>
+
+</body>
+</html>

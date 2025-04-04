@@ -31,9 +31,12 @@ func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 	if err != nil {
 		return err
 	}
-	// TODO: validate brand
 
-	// TODO: create event struct
+	err = brand.ValidateBrand(sub.Brand)
+	if err != nil {
+		return err
+	}
+
 	event, err := createAppleEvent(sub)
 	if err != nil {
 		return err

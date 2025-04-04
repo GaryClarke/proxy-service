@@ -29,3 +29,8 @@ func FromPlatformBrandID(platformBrandID string) (Brand, error) {
 		return "", fmt.Errorf("unknown platform brand id: %s", platformBrandID)
 	}
 }
+
+// ValidateBrand todo - add supported brand check later if required
+func ValidateBrand(brand Brand) error {
+	return nil
+}
