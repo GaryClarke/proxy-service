@@ -28,13 +28,18 @@ func (h *AppleHandler) supports(wh webhook.Webhook) bool {
 
 func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 	sub, err := decodeSubscriptionWebhook(wh.Payload)
-	fmt.Println("Apple decoded payload:", sub)
 	if err != nil {
 		return err
 	}
 	// TODO: validate brand
 
 	// TODO: create event struct
+	event, err := createAppleEvent(sub)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Event:", event.Subscription)
+
 	// TODO: forward the event
 	return nil
 }
@@ -60,6 +65,25 @@ func decodeSubscriptionWebhook(payload string) (*subnotes.Subscription, error) {
 	subscription.Brand = brandValue
 
 	return &subscription, nil
+}
+
+func createAppleEvent(sub *subnotes.Subscription) (*events.SubscriptionEvent, error) {
+	// Retrieve the lookup map for Apple events.
+	lookupMap, err := events.GetLookupData("apple")
+	if err != nil {
+		return nil, err
+	}
+
+	// Resolve the event definition using composite key fallback.
+	event, err := resolveAppleSubscriptionEvent(sub, lookupMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach the decoded subscription to the event definition.
+	event.Subscription = sub
+
+	return event, nil
 }
 
 // appleCompositeKeyCandidates generates a slice of candidate composite keys
