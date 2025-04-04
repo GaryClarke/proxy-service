@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Create Apple Event</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Create Apple Event</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we introduced the <code>createAppleEvent</code> function, which encapsulates the logic required to produce
+    a complete Apple subscription event from a decoded subscription. This function retrieves the lookup map for Apple events,
+    resolves the correct event definition using composite key fallback logic, and attaches the decoded subscription to the event.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Event Creation Function</h3>
+<ul>
+    <li>
+        <strong>Function Definition:</strong>
+        <pre><code>func createAppleEvent(sub *subnotes.Subscription) (*events.SubscriptionEvent, error) {
+    // Retrieve the lookup map for Apple events.
+    lookupMap, err := events.GetLookupData("apple")
+    if err != nil {
+        return nil, err
+    }
+
+    // Resolve the event definition using composite key fallback.
+    event, err := resolveAppleSubscriptionEvent(sub, lookupMap)
+    if err != nil {
+        return nil, err
+    }
+
+    // Attach the decoded subscription to the event definition.
+    event.Subscription = sub
+
+    return event, nil
+}</code></pre>
+    </li>
+    <li>
+        This function integrates three key steps:
+        <ul>
+            <li><strong>Lookup Map Retrieval:</strong> It calls <code>events.GetLookupData("apple")</code> to fetch the lookup data embedded in our binary.</li>
+            <li><strong>Event Resolution:</strong> It uses <code>resolveAppleSubscriptionEvent</code> along with composite key fallback logic to determine the best matching event.</li>
+            <li><strong>Event Enrichment:</strong> It attaches the decoded subscription to the event, producing a complete event object for further processing.</li>
+        </ul>
+    </li>
+</ul>
+
+<h3>2. Integration into the Apple Handler</h3>
+<ul>
+    <li>
+        The <code>AppleHandler.handle</code> function now calls <code>createAppleEvent</code> after decoding the subscription.
+    </li>
+    <li>
+        The updated handler function looks as follows:
+        <pre><code>func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
+    sub, err := decodeSubscriptionWebhook(wh.Payload)
+    if err != nil {
+        return err
+    }
+    // TODO: validate brand
+
+    // Create event struct.
+    event, err := createAppleEvent(sub)
+    if err != nil {
+        return err
+    }
+    fmt.Println("Event:", event.Subscription)
+
+    // TODO: forward the event
+    return nil
+}</code></pre>
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Modularity:</strong>
+        By encapsulating the event creation logic into <code>createAppleEvent</code>, we isolate the responsibilities
+        of retrieving lookup data, resolving an event via composite key fallback, and enriching the event with subscription details.
+    </li>
+    <li>
+        <strong>Maintainability:</strong>
+        The separation makes it easier to test and modify the event creation process without affecting other parts of the handler.
+    </li>
+</ul>
+
+</body>
+</html>
