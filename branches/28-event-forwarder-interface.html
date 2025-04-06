@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Rename to Event Package & Introduce EventForwarder Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Rename to Event Package & Introduce EventForwarder Interface</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we improved our code organization and modularity by renaming the <code>events</code> folder to <code>event</code> for consistency with Go naming conventions.
+    We also renamed the files accordingly:
+</p>
+<ul>
+    <li><code>internal/events/events.go</code> → <code>internal/event/subscription_event.go</code></li>
+    <li><code>internal/events/events_test.go</code> → <code>internal/event/subscription_event_test.go</code></li>
+</ul>
+<p>
+    In addition, we introduced a new interface, <code>EventForwarder</code>, in <code>internal/event/forwarder/forwarder.go</code>. This interface defines the methods for forwarding events,
+    providing a clear delegation mechanism for event processing.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. SubscriptionEvent in the Event Package</h3>
+<ul>
+    <li>
+        The <code>SubscriptionEvent</code> struct and the <code>GetLookupData</code> function are now defined in <code>internal/event/subscription_event.go</code>.
+    </li>
+    <li>
+        The <code>SubscriptionEvent</code> struct includes all event lookup data and an additional <code>Subscription</code> field (not marshalled to JSON) to hold the decoded subscription.
+    </li>
+</ul>
+
+<h3>2. Introduction of EventForwarder Interface</h3>
+<ul>
+    <li>
+        A new interface, <code>EventForwarder</code>, has been created in <code>internal/event/forwarder/forwarder.go</code>.
+    </li>
+    <li>
+        The interface defines two methods:
+        <ul>
+            <li><code>Supports(event *SubscriptionEvent) bool</code> – Checks if the forwarder can handle the given event.</li>
+            <li><code>Forward(event *SubscriptionEvent) error</code> – Executes the forwarding logic for the event.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Consistency:</strong> Renaming to the <code>event</code> package aligns with common Go naming conventions (usually singular) and keeps our project structure clear.
+    </li>
+    <li>
+        <strong>Modularity & Separation of Concerns:</strong> By separating event definitions and lookup logic from event forwarding logic (via the <code>EventForwarder</code> interface), we create a more modular, testable, and maintainable codebase.
+    </li>
+    <li>
+        <strong>Future Extensions:</strong> The <code>EventForwarder</code> interface provides a foundation for adding different forwarders for various event types, allowing easy extension without altering core event logic.
+    </li>
+</ul>
+
+</body>
+</html>

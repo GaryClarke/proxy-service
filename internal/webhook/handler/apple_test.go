@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/garyclarke/proxy-service/internal/assert"
 	"github.com/garyclarke/proxy-service/internal/brand"
-	"github.com/garyclarke/proxy-service/internal/events"
 	"github.com/garyclarke/proxy-service/internal/testutil"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"testing"
@@ -118,7 +117,7 @@ func TestResolveAppleSubscriptionEvent(t *testing.T) {
 	}
 
 	// Fake lookup map for Apple events.
-	lookupMap := map[string]events.SubscriptionEvent{
+	lookupMap := map[string]event.SubscriptionEvent{
 		// Exact match candidate: "SUBSCRIBED|INITIAL_BUY|true"
 		"SUBSCRIBED|INITIAL_BUY|true": {
 			Name:             "subscription_started",

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/brand"
-	"github.com/garyclarke/proxy-service/internal/events"
 	"github.com/garyclarke/proxy-service/internal/webhook"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"strings"
@@ -70,9 +69,9 @@ func decodeSubscriptionWebhook(payload string) (*subnotes.Subscription, error) {
 	return &subscription, nil
 }
 
-func createAppleEvent(sub *subnotes.Subscription) (*events.SubscriptionEvent, error) {
+func createAppleEvent(sub *subnotes.Subscription) (*event.SubscriptionEvent, error) {
 	// Retrieve the lookup map for Apple events.
-	lookupMap, err := events.GetLookupData("apple")
+	lookupMap, err := event.GetLookupData("apple")
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +120,8 @@ func appleCompositeKeyCandidates(sub *subnotes.Subscription) []string {
 // resolveAppleSubscriptionEvent returns the first matching SubscriptionEvent from the lookup map.
 func resolveAppleSubscriptionEvent(
 	sub *subnotes.Subscription,
-	lookupMap map[string]events.SubscriptionEvent,
-) (*events.SubscriptionEvent, error) {
+	lookupMap map[string]event.SubscriptionEvent,
+) (*event.SubscriptionEvent, error) {
 	candidates := appleCompositeKeyCandidates(sub)
 	for _, key := range candidates {
 		if event, ok := lookupMap[key]; ok {

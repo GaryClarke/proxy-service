@@ -1,14 +1,13 @@
-package events_test
+package event_test
 
 import (
 	"testing"
 
 	"github.com/garyclarke/proxy-service/internal/assert"
-	"github.com/garyclarke/proxy-service/internal/events"
 )
 
 func TestGetLookupData_Apple(t *testing.T) {
-	data, err := events.GetLookupData("apple")
+	data, err := event.GetLookupData("apple")
 	assert.NilFatalError(t, err)
 	assert.NotNil(t, data)
 
@@ -26,7 +25,7 @@ func TestGetLookupData_Apple(t *testing.T) {
 }
 
 func TestGetLookupData_Google(t *testing.T) {
-	data, err := events.GetLookupData("google")
+	data, err := event.GetLookupData("google")
 	assert.NilFatalError(t, err)
 	assert.NotNil(t, data)
 
