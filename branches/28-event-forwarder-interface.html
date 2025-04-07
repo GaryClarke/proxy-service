@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Branch Summary: Rename to Event Package & Introduce EventForwarder Interface</title>
+    <title>Branch Summary: Rename to Event Package, Forwarder Interface & Fixes</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -28,57 +28,64 @@
     </style>
 </head>
 <body>
-<h1>Branch Summary: Rename to Event Package & Introduce EventForwarder Interface</h1>
+<h1>Branch Summary: Rename to Event Package, Introduce EventForwarder Interface & Fix Naming Collisions</h1>
 
 <h2>Overview</h2>
 <p>
-    In this branch, we improved our code organization and modularity by renaming the <code>events</code> folder to <code>event</code> for consistency with Go naming conventions.
-    We also renamed the files accordingly:
-</p>
-<ul>
-    <li><code>internal/events/events.go</code> → <code>internal/event/subscription_event.go</code></li>
-    <li><code>internal/events/events_test.go</code> → <code>internal/event/subscription_event_test.go</code></li>
-</ul>
-<p>
-    In addition, we introduced a new interface, <code>EventForwarder</code>, in <code>internal/event/forwarder/forwarder.go</code>. This interface defines the methods for forwarding events,
-    providing a clear delegation mechanism for event processing.
+    In this branch, we improved our event processing system by renaming the <code>events</code> folder to <code>event</code> for consistency,
+    introducing an <code>EventForwarder</code> interface, and addressing issues that arose due to the package rename.
 </p>
 
 <h2>Key Changes</h2>
-<h3>1. SubscriptionEvent in the Event Package</h3>
+<h3>1. Renaming and File Organization</h3>
 <ul>
     <li>
-        The <code>SubscriptionEvent</code> struct and the <code>GetLookupData</code> function are now defined in <code>internal/event/subscription_event.go</code>.
+        The <code>events</code> folder has been renamed to <code>event</code> to align with Go's singular package naming convention.
     </li>
     <li>
-        The <code>SubscriptionEvent</code> struct includes all event lookup data and an additional <code>Subscription</code> field (not marshalled to JSON) to hold the decoded subscription.
+        File names were updated accordingly:
+        <ul>
+            <li><code>internal/events/events.go</code> → <code>internal/event/subscription_event.go</code></li>
+            <li><code>internal/events/events_test.go</code> → <code>internal/event/subscription_event_test.go</code></li>
+        </ul>
+    </li>
+    <li>
+        Imports have been updated to use <code>"github.com/garyclarke/proxy-service/internal/event"</code>.
     </li>
 </ul>
 
-<h3>2. Introduction of EventForwarder Interface</h3>
+<h3>2. Introducing the EventForwarder Interface</h3>
 <ul>
     <li>
-        A new interface, <code>EventForwarder</code>, has been created in <code>internal/event/forwarder/forwarder.go</code>.
-    </li>
-    <li>
-        The interface defines two methods:
+        A new <code>EventForwarder</code> interface has been created in <code>internal/event/forwarder/forwarder.go</code>, defining:
         <ul>
-            <li><code>Supports(event *SubscriptionEvent) bool</code> – Checks if the forwarder can handle the given event.</li>
-            <li><code>Forward(event *SubscriptionEvent) error</code> – Executes the forwarding logic for the event.</li>
+            <li><code>Supports(event *SubscriptionEvent) bool</code></li>
+            <li><code>Forward(event *SubscriptionEvent) error</code></li>
         </ul>
+    </li>
+</ul>
+
+<h3>3. Resolving Naming Collisions</h3>
+<ul>
+    <li>
+        Due to the package renaming, variables previously named <code>event</code> conflicted with the package name.
+        We resolved this by renaming these variables (e.g., to <code>subEvent</code>) for clarity and to avoid collisions.
     </li>
 </ul>
 
 <h2>Considerations</h2>
 <ul>
     <li>
-        <strong>Consistency:</strong> Renaming to the <code>event</code> package aligns with common Go naming conventions (usually singular) and keeps our project structure clear.
+        <strong>Consistency:</strong>
+        Renaming the folder and files to <code>event</code> aligns with common Go naming practices and improves project organization.
     </li>
     <li>
-        <strong>Modularity & Separation of Concerns:</strong> By separating event definitions and lookup logic from event forwarding logic (via the <code>EventForwarder</code> interface), we create a more modular, testable, and maintainable codebase.
+        <strong>Modularity & Separation of Concerns:</strong>
+        The <code>SubscriptionEvent</code> struct and associated lookup logic now reside in the <code>event</code> package, while the forwarding logic is abstracted through the <code>EventForwarder</code> interface.
     </li>
     <li>
-        <strong>Future Extensions:</strong> The <code>EventForwarder</code> interface provides a foundation for adding different forwarders for various event types, allowing easy extension without altering core event logic.
+        <strong>Naming Collisions:</strong>
+        We addressed conflicts between variable names and package names by renaming variables (e.g., from <code>event</code> to <code>subEvent</code>), ensuring that our code is clear and unambiguous.
     </li>
 </ul>
 
