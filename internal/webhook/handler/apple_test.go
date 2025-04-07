@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/garyclarke/proxy-service/internal/assert"
 	"github.com/garyclarke/proxy-service/internal/brand"
+	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/testutil"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"testing"
@@ -221,15 +222,15 @@ func TestResolveAppleSubscriptionEvent(t *testing.T) {
 			// Apply modifications for this test case.
 			tt.modify(sub)
 			// Resolve the event.
-			event, err := resolveAppleSubscriptionEvent(sub, lookupMap)
+			subEvent, err := resolveAppleSubscriptionEvent(sub, lookupMap)
 			if tt.expectError {
 				if err == nil {
 					t.Fatal("expected an error, got nil")
 				}
 			} else {
 				assert.NilFatalError(t, err)
-				assert.NotNil(t, event)
-				assert.Equal(t, event.Name, tt.expectedName)
+				assert.NotNil(t, subEvent)
+				assert.Equal(t, subEvent.Name, tt.expectedName)
 			}
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/brand"
+	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/webhook"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"strings"
@@ -36,11 +37,11 @@ func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 		return err
 	}
 
-	event, err := createAppleEvent(sub)
+	subEvent, err := createAppleEvent(sub)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Event:", event.Subscription)
+	fmt.Println("Event:", subEvent.Subscription)
 
 	// TODO: forward the event
 	return nil
@@ -77,15 +78,15 @@ func createAppleEvent(sub *subnotes.Subscription) (*event.SubscriptionEvent, err
 	}
 
 	// Resolve the event definition using composite key fallback.
-	event, err := resolveAppleSubscriptionEvent(sub, lookupMap)
+	subEvent, err := resolveAppleSubscriptionEvent(sub, lookupMap)
 	if err != nil {
 		return nil, err
 	}
 
-	// Attach the decoded subscription to the event definition.
-	event.Subscription = sub
+	// Attach the decoded subscription to the subEvent definition.
+	subEvent.Subscription = sub
 
-	return event, nil
+	return subEvent, nil
 }
 
 // appleCompositeKeyCandidates generates a slice of candidate composite keys
@@ -124,18 +125,18 @@ func resolveAppleSubscriptionEvent(
 ) (*event.SubscriptionEvent, error) {
 	candidates := appleCompositeKeyCandidates(sub)
 	for _, key := range candidates {
-		if event, ok := lookupMap[key]; ok {
-			// Create a copy of event so we can return its address.
+		if subEvent, ok := lookupMap[key]; ok {
+			// Create a copy of subEvent so we can return its address.
 			//
-			// In Go, when you retrieve a value from a map (e.g. "event := lookupMap[key]"),
+			// In Go, when you retrieve a value from a map (e.g. "subEvent := lookupMap[key]"),
 			// the returned value is not "addressable." This means you cannot take its address
-			// directly (i.e. you cannot write &lookupMap[key] or &event).
+			// directly (i.e. you cannot write &lookupMap[key] or &subEvent).
 			// The value is a copy and does not have a stable memory address you can refer to.
 			//
 			// To work around this, we assign the value to a local variable (eventCopy).
 			// This local variable is addressable, so we can take its address (i.e. &eventCopy)
 			// and return a pointer to it.
-			eventCopy := event
+			eventCopy := subEvent
 			return &eventCopy, nil
 		}
 	}
