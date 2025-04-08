@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Constructing Apple Handlers with Forwarders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Constructing Apple Handlers with Forwarders</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we update the construction of the AppleHandler so that it is instantiated with a slice of EventForwarders.
+    Previously, we relied on a default constructor call (with no arguments), and this led to build failures in the main package.
+    To address this, we now inject at least one forwarder into the AppleHandler via its constructor.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Constructor Update</h3>
+<ul>
+    <li>
+        The AppleHandler constructor (<code>NewAppleHandler</code>) now requires a slice of forwarders.
+        For example:
+        <pre><code>func NewAppleHandler(forwarders []forwarder.EventForwarder) *AppleHandler {
+    return &AppleHandler{forwarders: forwarders}
+}</code></pre>
+    </li>
+</ul>
+
+<h3>2. Updating Main and Tests</h3>
+<ul>
+    <li>
+        In <code>cmd/api/main.go</code> and <code>cmd/api/testutils_test.go</code>, the call to <code>NewAppleHandler()</code>
+        now fails because no forwarders are provided. This branch addresses the issue by injecting a forwarder instance.
+    </li>
+    <li>
+        For testing and development purposes, a stub forwarder can be used. However, in main, we plan to eventually substitute this with a fully implemented forwarder.
+    </li>
+    <li>
+        For example, the main file might now contain:
+        <pre><code>// Construct forwarders slice (for now, using a stub).
+forwarders := []forwarder.EventForwarder{
+    &forwarder.StubForwarder{},
+}
+appleHandler := handler.NewAppleHandler(forwarders)
+</code></pre>
+    </li>
+</ul>
+
+<h3>3. Future Directions</h3>
+<ul>
+    <li>
+        Although the current solution uses a stub forwarder (for both testing and main), the goal is to implement a real forwarder
+        that properly forwards events to an external service (such as Segment, or another system).
+    </li>
+    <li>
+        In subsequent branches, we will focus on replacing the stub with full forwarder logic and update the corresponding test cases accordingly.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Explicit Dependency Injection:</strong>
+        Our approach of passing a slice of forwarders to the constructor makes dependencies explicit,
+        enhancing clarity and testability.
+    </li>
+    <li>
+        <strong>Gradual Enhancement:</strong>
+        Using a stub forwarder initially allows us to integrate and test the new AppleHandler construction without introducing “magic”
+        from a dependency container, and it sets the stage for implementing a full forwarder later.
+    </li>
+    <li>
+        <strong>Consistency and Clarity:</strong>
+        Updating the main package and tests to pass the correct parameters eliminates build failures and ensures that
+        the runtime configuration mirrors the intended production setup.
+    </li>
+</ul>
+
+</body>
+</html>

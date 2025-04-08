@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/garyclarke/proxy-service/internal/event/forwarder"
 	"github.com/garyclarke/proxy-service/internal/webhook/handler"
 	"io"
 	"log/slog"
@@ -34,8 +35,11 @@ func newTestApplication(t *testing.T, debug bool) *application {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 
+	// Create a stub forwarder
+	stubForwarder := forwarder.StubForwarder{}
+
 	// Initialize the WebhookHandlers and initialize the delegator
-	appleHandler := handler.NewAppleHandler()
+	appleHandler := handler.NewAppleHandler([]forwarder.EventForwarder{&stubForwarder})
 
 	handlerDelegator := handler.NewHandlerDelegator(appleHandler)
 

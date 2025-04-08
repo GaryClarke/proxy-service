@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/event/forwarder"
 	"github.com/garyclarke/proxy-service/internal/webhook/handler"
 	"log/slog"
 	"net/http"
@@ -42,7 +43,8 @@ func main() {
 	// stream.
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	appleHandler := handler.NewAppleHandler()
+	// Initialize the WebhookHandlers and initialize the delegator
+	appleHandler := handler.NewAppleHandler([]forwarder.EventForwarder{&forwarder.StubForwarder{}})
 
 	// Declare an instance of the application struct, containing the config struct and
 	// the logger.
