@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Enhance AppleHandler to Forward Events</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Enhance AppleHandler to Forward Events</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch introduces a key enhancement to the AppleHandler. The handler now supports event forwarding by integrating
+    a delegation mechanism. We have updated the handler to:
+</p>
+<ul>
+    <li>Decode the subscription from the webhook payload.</li>
+    <li>Validate the brand via <code>brand.ValidateBrand</code>.</li>
+    <li>Create a subscription event using <code>createAppleEvent</code>.</li>
+    <li>Forward the event using a slice of forwarders that implement the <code>EventForwarder</code> interface.</li>
+</ul>
+
+<h2>Key Code Changes</h2>
+<h3>1. AppleHandler Enhancements</h3>
+<ul>
+    <li>
+        The <code>AppleHandler</code> struct now includes a forwarders field:
+        <pre><code>type AppleHandler struct {
+    forwarders []forwarder.EventForwarder
+}</code></pre>
+    </li>
+    <li>
+        The constructor has been updated to accept these forwarders:
+        <pre><code>func NewAppleHandler(forwarders []forwarder.EventForwarder) *AppleHandler {
+    return &AppleHandler{forwarders: forwarders}
+}</code></pre>
+    </li>
+    <li>
+        In <code>handle</code>, after creating an event, the handler iterates through the forwarders. For each forwarder that
+        supports the event, it calls <code>Forward</code>:
+        <pre><code>func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
+    sub, err := decodeSubscriptionWebhook(wh.Payload)
+    if err != nil {
+        return err
+    }
+
+    if err = brand.ValidateBrand(sub.Brand); err != nil {
+        return err
+    }
+
+    subEvent, err := createAppleEvent(sub)
+    if err != nil {
+        return err
+    }
+    fmt.Println("Event:", subEvent.Subscription)
+
+    // Forward the event using the appropriate forwarder.
+    for _, f := range h.forwarders {
+        if f.Supports(subEvent) {
+            if err := f.Forward(subEvent); err != nil {
+                return err
+            }
+        }
+    }
+
+    return nil
+}</code></pre>
+    </li>
+</ul>
+
+<h3>2. EventForwarder Interface</h3>
+<ul>
+    <li>
+        We introduced the <code>EventForwarder</code> interface (in <code>internal/event/forwarder/forwarder.go</code>), which defines:
+        <ul>
+            <li><code>Supports(event *SubscriptionEvent) bool</code> – Determines if a forwarder supports processing a given event.</li>
+            <li><code>Forward(event *SubscriptionEvent) error</code> – Contains the logic to forward the event (for example, sending data to an external service).</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Test Failures & Next Steps</h2>
+<ul>
+    <li>
+        When running the tests (e.g. via <code>go test -v ./...</code>),
+        you may encounter build errors similar to:
+        <pre><code>
+# github.com/garyclarke/proxy-service/cmd/api [github.com/garyclarke/proxy-service/cmd/api.test]
+cmd/api/main.go:45:18: not enough arguments in call to handler.NewAppleHandler
+        have ()
+        want ([]forwarder.EventForwarder)
+cmd/api/testutils_test.go:38:18: not enough arguments in call to handler.NewAppleHandler
+        have ()
+        want ([]forwarder.EventForwarder)
+FAIL    github.com/garyclarke/proxy-service/cmd/api [build failed]
+      </code></pre>
+    </li>
+    <li>
+        This failure occurs because <code>NewAppleHandler</code> now requires a slice of forwarders as an argument.
+    </li>
+    <li>
+        The next branch(es) will address these failures by updating the test initializations to pass appropriate forwarder implementations (or mocks)
+        to <code>NewAppleHandler</code>.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Explicit Dependency Injection:</strong>
+        By requiring forwarders in the constructor (in Go, this is a kind of factory function), we make dependencies explicit. This improves code clarity and testability.
+    </li>
+    <li>
+        <strong>Modularity:</strong>
+        The introduction of the <code>EventForwarder</code> interface lays the foundation for a flexible, modular event processing system.
+        Different forwarders can be implemented to handle various event types without modifying the handler logic.
+    </li>
+    <li>
+        <strong>Test Coverage:</strong>
+        Although the new dependency requirement causes initial test build failures, these will be corrected in a subsequent branch
+        by providing suitable forwarder instances in tests.
+    </li>
+</ul>
+
+</body>
+</html>

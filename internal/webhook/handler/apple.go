@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/brand"
 	"github.com/garyclarke/proxy-service/internal/event"
+	"github.com/garyclarke/proxy-service/internal/event/forwarder"
 	"github.com/garyclarke/proxy-service/internal/webhook"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"strings"
@@ -14,11 +15,13 @@ import (
 const AppleNotification = "AppleIAPNotification"
 
 // AppleHandler is a basic Apple webhook handler.
-type AppleHandler struct{}
+type AppleHandler struct {
+	forwarders []forwarder.EventForwarder
+}
 
-// NewAppleHandler returns a new instance of the Apple Handler.
-func NewAppleHandler() *AppleHandler {
-	return &AppleHandler{}
+// NewAppleHandler returns a new instance of the AppleHandler with the provided forwarders.
+func NewAppleHandler(forwarders []forwarder.EventForwarder) *AppleHandler {
+	return &AppleHandler{forwarders: forwarders}
 }
 
 // supports checks whether this handler should process the webhook.
@@ -32,8 +35,7 @@ func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 		return err
 	}
 
-	err = brand.ValidateBrand(sub.Brand)
-	if err != nil {
+	if err = brand.ValidateBrand(sub.Brand); err != nil {
 		return err
 	}
 
@@ -43,7 +45,15 @@ func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 	}
 	fmt.Println("Event:", subEvent.Subscription)
 
-	// TODO: forward the event
+	// Forward the event using the appropriate forwarder.
+	for _, f := range h.forwarders {
+		if f.Supports(subEvent) {
+			if err := f.Forward(subEvent); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
