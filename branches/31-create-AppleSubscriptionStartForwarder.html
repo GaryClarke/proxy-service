@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Constructing Apple Handlers with Concrete Forwarder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Constructing Apple Handlers with Concrete Forwarder</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we update the construction of the AppleHandler to use a concrete forwarder rather than a stub.
+    We modify both the test application (in <code>testutils_test.go</code>) and the main application (in <code>main.go</code>)
+    to pass a slice of forwarders—specifically an instance of <code>AppleSubscriptionStartForwarder</code>—into the handler constructor.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. Updating the Test Application</h3>
+<ul>
+    <li>
+        In the test setup function (<code>newTestApplication</code>), we now inject a concrete forwarder instance:
+        <pre><code>func newTestApplication(t *testing.T, debug bool) *application {
+    var logger *slog.Logger
+    if debug {
+        logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+    } else {
+        logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+    }
+
+    // Initialize the AppleHandler with a slice of forwarders,
+    // using the concrete AppleSubscriptionStartForwarder.
+    appleHandler := handler.NewAppleHandler([]forwarder.EventForwarder{
+        &forwarder.AppleSubscriptionStartForwarder{},
+    })
+
+    handlerDelegator := handler.NewHandlerDelegator(appleHandler)
+
+    return &application{
+        config: config{
+            env:       "testing",
+            debugMode: debug,
+        },
+        logger:           logger,
+        handlerDelegator: handlerDelegator,
+    }
+}
+      </code></pre>
+    </li>
+</ul>
+
+<h3>2. Updating Main</h3>
+<ul>
+    <li>
+        In <code>main.go</code>, we now pass a slice containing <code>&forwarder.AppleSubscriptionStartForwarder{}</code>
+        to <code>handler.NewAppleHandler</code>. For example:
+        <pre><code>func main() {
+    // Read config from flags...
+    logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+    // Construct forwarders slice (using the concrete forwarder).
+    forwarders := []forwarder.EventForwarder{
+        &forwarder.AppleSubscriptionStartForwarder{},
+    }
+    appleHandler := handler.NewAppleHandler(forwarders)
+
+    app := &application{
+        config:           cfg,
+        logger:           logger,
+        handlerDelegator: handler.NewHandlerDelegator(appleHandler),
+    }
+
+    // Set up and start the HTTP server.
+    srv := &http.Server{
+        Addr:         fmt.Sprintf(":%d", cfg.port),
+        Handler:      app.routes(),
+        IdleTimeout:  time.Minute,
+        ReadTimeout:  5 * time.Second,
+        WriteTimeout: 5 * time.Second,
+        ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+    }
+
+    logger.Info("starting server", "addr", srv.Addr, "env", cfg.env)
+    err := srv.ListenAndServe()
+    logger.Error(err.Error())
+    os.Exit(1)
+}
+      </code></pre>
+    </li>
+</ul>
+
+<h3>3. Constructor & Instance Creation</h3>
+<ul>
+    <li>
+        Notice that when creating a new forwarder we write <code>&forwarder.AppleSubscriptionStartForwarder{}</code>.
+        The curly braces <code>{}</code> are required even if no fields are set, to create an instance of the struct.
+        This instance is then used as part of the forwarders slice.
+    </li>
+</ul>
+
+<h2>Test Failures & Next Steps</h2>
+<ul>
+    <li>
+        The build failures in <code>cmd/api/main.go</code> and <code>cmd/api/testutils_test.go</code> were caused by calls to
+        <code>handler.NewAppleHandler()</code> without arguments. Now, with the updated constructor requiring a slice of forwarders,
+        these files need to pass in a concrete forwarder (as shown above) for successful compilation.
+    </li>
+    <li>
+        In the next branch, we will work on fine-tuning the forwarder behavior (replacing the placeholder forwarding logic with
+        real code) while ensuring that our application and tests continue to run as expected.
+    </li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Explicit Dependency Injection:</strong>
+        Passing a slice of forwarders into the handler constructor makes dependencies explicit, improving clarity and testability.
+    </li>
+    <li>
+        <strong>Consistency with Production:</strong>
+        By updating both test and main files to use a concrete forwarder, the runtime behavior in tests mirrors what is expected in production.
+    </li>
+    <li>
+        <strong>Future Enhancements:</strong>
+        With the forwarder interface in place, we can easily add additional logic or different types of forwarders (such as for Google)
+        in future branches.
+    </li>
+</ul>
+
+</body>
+</html>

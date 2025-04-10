@@ -44,7 +44,7 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	// Initialize the WebhookHandlers and initialize the delegator
-	appleHandler := handler.NewAppleHandler([]forwarder.EventForwarder{&forwarder.StubForwarder{}})
+	appleHandler := handler.NewAppleHandler([]forwarder.EventForwarder{&forwarder.AppleSubscriptionStartForwarder{}})
 
 	// Declare an instance of the application struct, containing the config struct and
 	// the logger.
