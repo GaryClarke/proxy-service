@@ -32,7 +32,7 @@
 
 <h2>Overview</h2>
 <p>
-    In this branch, we update the construction of the AppleHandler to use a concrete forwarder rather than a stub.
+    In this branch, we update the construction of the AppleHandler to use a concrete forwarder instead of a stub.
     We modify both the test application (in <code>testutils_test.go</code>) and the main application (in <code>main.go</code>)
     to pass a slice of forwarders—specifically an instance of <code>AppleSubscriptionStartForwarder</code>—into the handler constructor.
 </p>
@@ -125,11 +125,13 @@
     <li>
         The build failures in <code>cmd/api/main.go</code> and <code>cmd/api/testutils_test.go</code> were caused by calls to
         <code>handler.NewAppleHandler()</code> without arguments. Now, with the updated constructor requiring a slice of forwarders,
-        these files need to pass in a concrete forwarder (as shown above) for successful compilation.
+        these files have been updated to pass in a concrete forwarder.
     </li>
     <li>
-        In the next branch, we will work on fine-tuning the forwarder behavior (replacing the placeholder forwarding logic with
-        real code) while ensuring that our application and tests continue to run as expected.
+        <strong>Current Test Coverage Gap:</strong> Even if we modify the <code>Supports</code> method of the forwarder (for example, changing
+        its condition), our end-to-end tests still pass. This indicates that we do not yet have dedicated test coverage for the forwarder's
+        behavior. In the next branch, we will add targeted unit tests (for example, in a file like <code>forwarder/apple_test.go</code>)
+        to specifically validate the <code>Supports</code> and <code>Forward</code> methods.
     </li>
 </ul>
 
@@ -144,9 +146,13 @@
         By updating both test and main files to use a concrete forwarder, the runtime behavior in tests mirrors what is expected in production.
     </li>
     <li>
+        <strong>Test Coverage:</strong>
+        The fact that our tests currently pass even when altering forwarder logic indicates a gap in our coverage. We will add targeted tests
+        in the next branch to ensure forwarder behavior is fully verified.
+    </li>
+    <li>
         <strong>Future Enhancements:</strong>
-        With the forwarder interface in place, we can easily add additional logic or different types of forwarders (such as for Google)
-        in future branches.
+        With the forwarder interface in place, we can easily add additional logic or different types of forwarders (e.g., for Google) in future branches.
     </li>
 </ul>
 
