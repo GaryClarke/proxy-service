@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Apple Forwarder Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Apple Forwarder Test</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we introduced a table-driven test for the Apple forwarder to ensure that its behavior is correct.
+    Specifically, we test the <code>Supports</code> method of the <code>AppleSubscriptionStartForwarder</code> for both the
+    happy path (when the event category matches <code>CATEGORY_START</code>) and the failure scenario (when it does not).
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        Created <code>apple_test.go</code> in the forwarder package to isolate and test the Apple forwarder's functionality.
+    </li>
+    <li>
+        Implemented a table-driven test that iterates over test cases with different event categories.
+        The tests validate that the <code>Supports</code> method returns <code>true</code> when the event category matches
+        <code>CATEGORY_START</code> and <code>false</code> otherwise.
+    </li>
+</ul>
+
+<h2>Testing Strategy</h2>
+<ul>
+    <li>
+        <strong>Table-Driven Testing:</strong>
+        By using a table-driven approach, multiple scenarios are defined in a single test function, similar to data providers in other frameworks.
+    </li>
+    <li>
+        <strong>Scenario Coverage:</strong>
+        The test covers both the happy path and an error scenario, ensuring that the forwarder behaves as expected across different inputs.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>
+        With the basic behavior of the forwarder verified, the next steps will involve implementing and testing the full forwarding logic.
+    </li>
+    <li>
+        Additional tests for other forwarders (such as those for Google events) can be added to ensure consistent behavior across platforms.
+    </li>
+</ul>
+
+</body>
+</html>
