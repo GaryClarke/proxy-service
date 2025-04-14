@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Integrate segmentio/analytics-go</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Integrate segmentio/analytics-go</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we integrated the Segment Analytics Go client (<code>github.com/segmentio/analytics-go</code>) into our project.
+    The only changes in this branch were the updates to the <code>go.mod</code> and <code>go.sum</code> files as the new dependency was added.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        Updated the module dependencies via <code>go get github.com/segmentio/analytics-go</code>, which automatically modified
+        <code>go.mod</code> and <code>go.sum</code> to include the Segment Go client.
+    </li>
+    <li>
+        The <code>go.mod</code> file now includes:
+        <pre><code>
+module github.com/garyclarke/proxy-service
+
+go 1.23.2
+
+require (
+    github.com/davecgh/go-spew v1.1.1 // indirect
+    github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
+    github.com/segmentio/backo-go v1.1.0 // indirect
+    github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
+)
+      </code></pre>
+    </li>
+</ul>
+
+<h2>Intended Usage</h2>
+<p>
+    The intention is to use the <code>segmentio/analytics-go</code> library for constructing and sending requests to Segment.
+    This library will enable us to build identify, track, and other types of events in a type-safe and idiomatic way while allowing
+    for dependency injection and easy testing.
+</p>
+
+<h2>Considerations & Next Steps</h2>
+<ul>
+    <li>
+        With the dependency now included, our next step will be to implement wrappers around the Segment API, using this library to
+        construct events (like identify and track) and forward them to Segment.
+    </li>
+    <li>
+        The updated dependency management ensures that our project builds correctly and paves the way for a complete implementation
+        of our Segment client integration.
+    </li>
+</ul>
+
+</body>
+</html>
