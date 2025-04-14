@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Segment Interfaces</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Segment Interfaces</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch, we introduced two new interfaces—<code>IdentifyConverter</code> and <code>TrackConverter</code>—designed to abstract
+    the conversion of our internal payload structures into Segment events. These interfaces provide a flexible and testable way to build
+    Segment messages (identify and track) using the <code>github.com/segmentio/analytics-go</code> library.
+</p>
+
+<h2>Key Changes</h2>
+<h3>1. IdentifyConverter Interface</h3>
+<ul>
+    <li>
+        Defined in <code>internal/segment/identify/identify.go</code> (or a similar location), the <code>IdentifyConverter</code> interface
+        specifies a single method:
+        <pre><code>type IdentifyConverter interface {
+    // ToIdentify converts the implementation to an analytics.Identify message,
+    // which can then be enqueued for sending to Segment.
+    ToIdentify() analytics.Identify
+}
+      </code></pre>
+    </li>
+    <li>
+        This interface is intended to be implemented by any type (typically a payload struct) that encapsulates the data for an
+        identify event. By using this interface, our code remains decoupled from the specific data structures, and we gain flexibility to swap implementations,
+        especially during testing.
+    </li>
+</ul>
+
+<h3>2. TrackConverter Interface</h3>
+<ul>
+    <li>
+        Similarly, in <code>internal/segment/track/track.go</code>, the <code>TrackConverter</code> interface is defined as:
+        <pre><code>type TrackConverter interface {
+    // ToTrack converts the implementation into an analytics.Track message,
+    // which can then be enqueued for sending to Segment.
+    ToTrack() analytics.Track
+}
+      </code></pre>
+    </li>
+    <li>
+        This interface allows for the conversion of various payloads into Track messages. It is especially useful because different parts of
+        our application might produce track events with varying data, and using an interface standardizes the conversion process.
+    </li>
+</ul>
+
+<h2>Naming Considerations</h2>
+<ul>
+    <li>
+        We intentionally chose the names <code>IdentifyConverter</code> and <code>TrackConverter</code> to emphasize that these interfaces
+        focus on converting internal payloads to the corresponding Segment message structures (identify and track, respectively).
+    </li>
+    <li>
+        Using the term "Converter" avoids confusion with a payload that is simply a data container. It clarifies that the main responsibility of
+        any implementation is to perform the conversion.
+    </li>
+    <li>
+        This naming also helps differentiate these interfaces from other kinds of "models" or "payloads" in the application, making their purpose explicit,
+        and it fits well with Go’s preference for clear, descriptive names.
+    </li>
+</ul>
+
+<h2>Considerations & Next Steps</h2>
+<ul>
+    <li>
+        These interfaces enable a decoupled design that enhances testability. During unit tests, you can provide fake implementations of these converters
+        to verify that the rest of your event-forwarding pipeline behaves as expected.
+    </li>
+    <li>
+        In future branches, we will implement concrete types that satisfy these interfaces. These types will map our internal data to the specific attributes
+        required by Segment’s Identify and Track methods.
+    </li>
+    <li>
+        This design keeps the code modular and opens the possibility for further enhancements, such as validation or additional transformation logic,
+        without impacting the rest of the system.
+    </li>
+</ul>
+
+</body>
+</html>
