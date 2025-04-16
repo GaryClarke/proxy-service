@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: SubscriptionStartPayload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: SubscriptionStartPayload</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch introduces support for <code>Identify</code> events related to subscription start using Segment.
+    The new <code>SubscriptionStartPayload</code> type encapsulates the data needed to generate these events, and provides a method for
+    converting itself to an <code>analytics.Identify</code> message.
+</p>
+
+<h2>Key Changes</h2>
+
+<h3>1. <code>SubscriptionStartPayload</code></h3>
+<ul>
+    <li>
+        Located in <code>internal/segment/identify</code>, the <code>SubscriptionStartPayload</code> struct contains fields such as <code>UserID</code>,
+        <code>BrandCode</code>, <code>AccountGuid</code>, <code>Subscribed</code>, <code>SubscriptionID</code>, and optional Airship fields.
+    </li>
+    <li>
+        It includes a <code>ToIdentify()</code> method which maps those fields to dynamic trait keys like:
+        <pre><code>acc_{brandCode}_guid
+app_{brandCode}_sub
+app_{brandCode}_sub_id
+app_{brandCode}_auto_renew_status
+{brandCode}_airship_channel_id
+acc_{brandCode}_airship_id</code></pre>
+    </li>
+    <li>
+        An <code>analytics.Context</code> is also included in the event with <code>brand_code</code> as contextual metadata.
+    </li>
+</ul>
+
+<h3>2. <code>segment.Traits</code></h3>
+<ul>
+    <li>
+        Introduced in <code>internal/segment</code>, this struct wraps <code>analytics.Traits</code> from the Segment SDK using Go embedding.
+    </li>
+    <li>
+        A new method <code>SetIfNotEmpty</code> has been added to allow traits to be set only if the value is non-empty (for example,
+        not an empty string or <code>nil</code>).
+    </li>
+    <li>
+        This helps keep Identify events clean and free of empty or default values that don’t need to be sent.
+    </li>
+</ul>
+
+<h2>Design Notes</h2>
+<ul>
+    <li>
+        The use of Go’s <strong>embedding</strong> allows <code>segment.Traits</code> to behave like <code>analytics.Traits</code> while adding
+        custom logic via <code>SetIfNotEmpty</code>.
+    </li>
+    <li>
+        This approach demonstrates <strong>method extension</strong> in Go — where we enhance a third-party type with additional behavior without modifying it directly.
+    </li>
+    <li>
+        This pattern is clean, idiomatic Go, and gives us flexibility to build expressive APIs around external libraries like Segment.
+    </li>
+</ul>
+
+</body>
+</html>
