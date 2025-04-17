@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Testing SetIfNotEmpty Helper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Testing SetIfNotEmpty Helper</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch adds a unit test for the new <code>SetIfNotEmpty</code> helper method on <code>segment.Traits</code>.
+    The helper conditionally sets a key/value pair in the underlying map only if the value is non‑empty (for strings)
+    and non‑nil (for other types).
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New Test File:</strong> <code>internal/segment/helpers_test.go</code>
+        introduces <code>TestSetIfNotEmpty</code>, covering five scenarios:
+        <ul>
+            <li>Non‑empty string → should be set</li>
+            <li>Empty string → should NOT be set</li>
+            <li>Nil value → should NOT be set</li>
+            <li>Number (42) → should be set</li>
+            <li>Boolean (false) → should be set</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Assertions:</strong>
+        Uses <code>assert.Equal</code> and <code>assert.NotContains</code> from <code>stretchr/testify</code>
+        to verify correct behavior for each case.
+    </li>
+</ul>
+
+<h2>Testing Approach</h2>
+<p>
+    A straightforward unit test directly invokes <code>SetIfNotEmpty</code> on a fresh <code>segment.Traits</code> instance.
+    This ensures the helper honors its contract without needing any external dependencies.
+</p>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Pointer Receiver:</strong>
+        The helper attaches to <code>*Traits</code> allowing in-place mutation of the embedded map.
+    </li>
+    <li>
+        <strong>Map Initialization:</strong>
+        We use <code>make(map[string]interface{})</code> to ensure the map is ready to accept entries.
+    </li>
+    <li>
+        <strong>Empty vs. Zero Values:</strong>
+        Empty strings and nil are skipped to avoid overwriting existing Segment traits with blank data,
+        while zero‑value booleans are deliberately included.
+    </li>
+</ul>
+</body>
+</html>
