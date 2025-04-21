@@ -1,44 +1,40 @@
 package event_test
 
 import (
-	"github.com/garyclarke/proxy-service/internal/event"
 	"testing"
 
-	"github.com/garyclarke/proxy-service/internal/assert"
+	"github.com/garyclarke/proxy-service/internal/event"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetLookupData_Apple(t *testing.T) {
 	data, err := event.GetLookupData("apple")
-	assert.NilFatalError(t, err)
-	assert.NotNil(t, data)
-
-	// Check correct number of items in apple map
-	assert.Equal(t, len(data), 20)
+	assert.NoError(t, err, "expected no error when loading Apple lookup data")
+	assert.NotNil(t, data, "expected non‑nil map for Apple lookup data")
+	assert.Equal(t, 20, len(data), "expected 20 items in Apple lookup data")
 
 	// Verify that a specific event key exists and has expected values.
 	subEvent, ok := data["SUBSCRIBED|INITIAL_BUY|false"]
-	if !ok {
-		t.Fatal("expected key 'SUBSCRIBED|INITIAL_BUY|false' not found")
+	assert.True(t, ok, "expected key 'SUBSCRIBED|INITIAL_BUY|false' to be present")
+	assert.Equal(t, "subscription_started", subEvent.Name)
+	assert.Equal(t, "CATEGORY_START", subEvent.Category)
+	if assert.NotNil(t, subEvent.SubStatus, "SubStatus pointer should not be nil") {
+		assert.Equal(t, "First time subscriber", *subEvent.SubStatus)
 	}
-	assert.Equal(t, subEvent.Name, "subscription_started")
-	assert.Equal(t, subEvent.Category, "CATEGORY_START")
-	assert.Equal(t, *subEvent.SubStatus, "First time subscriber")
 }
 
 func TestGetLookupData_Google(t *testing.T) {
 	data, err := event.GetLookupData("google")
-	assert.NilFatalError(t, err)
-	assert.NotNil(t, data)
-
-	// Check correct number of items in google map
-	assert.Equal(t, len(data), 14)
+	assert.NoError(t, err, "expected no error when loading Google lookup data")
+	assert.NotNil(t, data, "expected non‑nil map for Google lookup data")
+	assert.Equal(t, 14, len(data), "expected 14 items in Google lookup data")
 
 	// Verify that a specific event key exists and has expected values.
 	subEvent, ok := data["PURCHASED|null|false"]
-	if !ok {
-		t.Fatal("expected key 'PURCHASED|null|false' not found")
+	assert.True(t, ok, "expected key 'PURCHASED|null|false' to be present")
+	assert.Equal(t, "subscription_started", subEvent.Name)
+	assert.Equal(t, "CATEGORY_START", subEvent.Category)
+	if assert.NotNil(t, subEvent.SubStatus, "SubStatus pointer should not be nil") {
+		assert.Equal(t, "Subscriber", *subEvent.SubStatus)
 	}
-	assert.Equal(t, subEvent.Name, "subscription_started")
-	assert.Equal(t, subEvent.Category, "CATEGORY_START")
-	assert.Equal(t, *subEvent.SubStatus, "Subscriber")
 }

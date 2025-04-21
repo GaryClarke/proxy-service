@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/garyclarke/proxy-service/internal/assert"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"testing"
@@ -26,16 +26,26 @@ func TestHealthcheckHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer rs.Body.Close()
+	// Even though Close() can return an error, we deliberately ignore it here.
+	// In this context (a test closing an HTTP response body), there isn’t any
+	// meaningful recovery we could do if Close failed—our only goal is to free
+	// the underlying resources. Using a tiny deferred closure lets us explicitly
+	// discard the error (_ = …) without adding linter comments.
+	defer func() { _ = rs.Body.Close() }()
+
 	body, err := io.ReadAll(rs.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
 	body = bytes.TrimSpace(body)
 
-	assert.Equal(t, rs.StatusCode, http.StatusOK)
-	assert.Equal(t, rs.Header.Get("Content-Type"), "application/json")
-	assert.Equal(t, string(body), `{"environment":"testing","status":"available","version":"1.0.0"}`)
+	assert.Equal(t, http.StatusOK, rs.StatusCode)
+	assert.Equal(t, "application/json", rs.Header.Get("Content-Type"))
+	assert.Equal(
+		t,
+		`{"environment":"testing","status":"available","version":"1.0.0"}`,
+		string(body),
+	)
 }
 
 func TestWebhookHandler_AppleScenarios(t *testing.T) {

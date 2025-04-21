@@ -3,8 +3,9 @@ package handler
 import (
 	"context"
 	"errors"
-	"github.com/garyclarke/proxy-service/internal/assert"
 	"github.com/garyclarke/proxy-service/internal/webhook"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -99,16 +100,22 @@ func TestDelegator_Delegate(t *testing.T) {
 			err := delegator.Delegate(context.Background(), testWebhook)
 
 			if tt.expectedError != nil {
-				if err == nil || err.Error() != tt.expectedError.Error() {
-					t.Fatalf("expected delegator error %v, got %v", tt.expectedError, err)
-				}
+				// Since an unexpected error means there’s no point in continuing the rest of the sub‑test
+				// we use require instead of assert
+				require.EqualError(t, err, tt.expectedError.Error())
+
 			} else {
-				assert.NilError(t, err)
+				assert.NoError(t, err)
 			}
 
 			// Check that each fake's handle method was called as expected.
 			for i, fh := range tt.handlers {
-				assert.Equal(t, fh.handleCalled, tt.expectedHandleCalled[i])
+				assert.Equal(
+					t,
+					tt.expectedHandleCalled[i],
+					fh.handleCalled,
+					"handler #%d handleCalled mismatch", i,
+				)
 			}
 		})
 	}

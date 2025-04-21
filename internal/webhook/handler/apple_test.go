@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"github.com/garyclarke/proxy-service/internal/assert"
 	"github.com/garyclarke/proxy-service/internal/brand"
 	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/testutil"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -24,28 +24,28 @@ func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {
 	sub, err := decodeSubscriptionWebhook(payload)
 
 	// Assert
-	assert.NilFatalError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, sub)
-	assert.Equal(t, sub.Brand, brand.GF)
+	assert.Equal(t, brand.GF, sub.Brand)
 
-	// Assert some values in nested structs.
-	assert.Equal(t, sub.Properties.MemberStatus, "active")
-	assert.Equal(t, sub.Properties.Entitlement, "APP - iOS")
-	assert.Equal(t, sub.Properties.TimePeriod, "Annual")
+	// Properties.
+	assert.Equal(t, "active", sub.Properties.MemberStatus)
+	assert.Equal(t, "APP - iOS", sub.Properties.Entitlement)
+	assert.Equal(t, "Annual", sub.Properties.TimePeriod)
 
-	// Assert a value in jwsTransaction.
+	// JwsTransaction.
 	assert.NotNil(t, sub.JwsTransaction)
-	assert.Equal(t, sub.JwsTransaction.BundleID, "uk.co.bbc.goodfood2")
-	assert.Equal(t, sub.JwsTransaction.Type, "INITIAL_BUY")
+	assert.Equal(t, "uk.co.bbc.goodfood2", sub.JwsTransaction.BundleID)
+	assert.Equal(t, "INITIAL_BUY", sub.JwsTransaction.Type)
 
-	// Assert a value in jwsRenewalInfo.
+	// JwsRenewalInfo.
 	assert.NotNil(t, sub.JwsRenewalInfo)
-	assert.Equal(t, sub.JwsRenewalInfo.Environment, "Sandbox")
+	assert.Equal(t, "Sandbox", sub.JwsRenewalInfo.Environment)
 
-	// Assert a value in serverData.
+	// ServerData.
 	assert.NotNil(t, sub.ServerData)
-	assert.Equal(t, sub.ServerData.NotificationType, "SUBSCRIBED")
-	assert.Equal(t, *sub.ServerData.SubType, "INITIAL_BUY")
+	assert.Equal(t, "SUBSCRIBED", sub.ServerData.NotificationType)
+	assert.Equal(t, "INITIAL_BUY", *sub.ServerData.SubType)
 }
 
 func TestDecodeSubscriptionWebhook_InvalidPayload(t *testing.T) {
@@ -71,15 +71,16 @@ func TestCreateAppleEvent_Success(t *testing.T) {
 	}
 
 	// Call createAppleEvent, which now internally retrieves the lookup map.
-	event, err := createAppleEvent(sub)
-	assert.NilFatalError(t, err)
-	assert.NotNil(t, event)
-	assert.Equal(t, event.Name, "subscription_started")
-	assert.Equal(t, *event.SubStatus, "Trialist")
-	assert.Equal(t, event.Category, "CATEGORY_START")
-	assert.Equal(t, event.NotificationType, "SUBSCRIBED")
-	assert.Equal(t, *event.SubType, "INITIAL_BUY")
-	assert.NotNil(t, event.Subscription)
+	subEvent, err := createAppleEvent(sub)
+	// Assertions
+	assert.NoError(t, err)
+	assert.NotNil(t, subEvent)
+	assert.Equal(t, "subscription_started", subEvent.Name)
+	assert.Equal(t, "Trialist", *subEvent.SubStatus)
+	assert.Equal(t, "CATEGORY_START", subEvent.Category)
+	assert.Equal(t, "SUBSCRIBED", subEvent.NotificationType)
+	assert.Equal(t, "INITIAL_BUY", *subEvent.SubType)
+	assert.NotNil(t, subEvent.Subscription)
 }
 
 func TestCreateAppleEvent_NoMatch(t *testing.T) {
@@ -224,13 +225,11 @@ func TestResolveAppleSubscriptionEvent(t *testing.T) {
 			// Resolve the event.
 			subEvent, err := resolveAppleSubscriptionEvent(sub, lookupMap)
 			if tt.expectError {
-				if err == nil {
-					t.Fatal("expected an error, got nil")
-				}
+				assert.Error(t, err)
 			} else {
-				assert.NilFatalError(t, err)
+				assert.NoError(t, err)
 				assert.NotNil(t, subEvent)
-				assert.Equal(t, subEvent.Name, tt.expectedName)
+				assert.Equal(t, tt.expectedName, subEvent.Name)
 			}
 		})
 	}

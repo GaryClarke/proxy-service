@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Migrate Tests to Testify Assertions</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Migrate Tests to Testify Assertions</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we removed our custom <code>internal/assert</code> package and switched all test files to use
+    <a href="https://github.com/stretchr/testify">Testify</a>’s <code>assert</code> and <code>require</code> helpers.
+    This simplifies our test code, leverages a battle‑tested library, and reduces maintenance overhead.
+</p>
+
+<h2>Key Changes</h2>
+
+<h3>1. Deleted Custom Assertions</h3>
+<ul>
+    <li>Removed <code>internal/assert</code> entirely from the repo and <code>go.mod</code>.</li>
+    <li>Dropped any references to <code>assert.NilFatalError</code>, <code>assert.Equal</code> (custom), etc.</li>
+</ul>
+
+<h3>2. Imported Testify in All Test Files</h3>
+<ul>
+    <li>Added <code>github.com/stretchr/testify/assert</code> and, where needed, <code>github.com/stretchr/testify/require</code>.</li>
+    <li>Replaced:
+        <pre><code>assert.NilFatalError(t, err)</code></pre>
+        with
+        <pre><code>require.NoError(t, err)</code></pre>
+        when a fatal failure is desired, or
+        <pre><code>assert.NoError(t, err)</code></pre>
+        for non‑fatal checks.</li>
+    <li>Replaced:
+        <pre><code>assert.Equal(t, expected, actual)</code></pre>
+        with
+        <pre><code>assert.Equal(t, expected, actual)</code></pre>
+        (Testify’s version).</li>
+</ul>
+
+<h3>3. Table‑Driven Tests Now Use Testify</h3>
+<ul>
+    <li>All table‑driven loops now use <code>assert</code>/<code>require</code> inside the loop:</li>
+    <pre><code>for _, tc := range tests {
+    t.Run(tc.name, func(t *testing.T) {
+      // ...
+      assert.NoError(t, err)
+      assert.Equal(t, tc.expected, got)
+    })
+  }</code></pre>
+</ul>
+
+<h2>Benefits</h2>
+<ul>
+    <li><strong>Readability:</strong> Testify’s expressive helpers are familiar to most Go developers.</li>
+    <li><strong>Less Boilerplate:</strong> Fewer custom wrappers to maintain.</li>
+    <li><strong>Rich Feature Set:</strong> We can add <code>require</code>, <code>mock</code>, and more in the future.</li>
+</ul>
+
+</body>
+</html>

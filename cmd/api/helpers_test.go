@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/garyclarke/proxy-service/internal/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteJSON(t *testing.T) {
@@ -26,23 +27,22 @@ func TestWriteJSON(t *testing.T) {
 	}
 
 	err := app.writeJSON(rr, http.StatusOK, data, headers)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
+	assert.NoError(t, err)
 
-	assert.Equal(t, rr.Code, http.StatusOK)
-	assert.Equal(t, rr.Header().Get("Content-Type"), "application/json")
-	assert.Equal(t, rr.Header().Get("X-Custom-Header"), "test-value")
+	// Status and headers
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
+	assert.Equal(t, "test-value", rr.Header().Get("X-Custom-Header"))
 
-	// Check the response body.
+	// Body (JSON + newline)
 	expectedBody, err := json.Marshal(data)
-	if err != nil {
-		t.Fatalf("failed to marshal expected JSON: %v", err)
-	}
-	// Append a newline since writeJSON adds one.
+	assert.NoError(t, err)
 	expectedBody = append(expectedBody, '\n')
-
-	assert.Equal(t, strings.TrimSpace(rr.Body.String()), strings.TrimSpace(string(expectedBody)))
+	assert.Equal(
+		t,
+		strings.TrimSpace(string(expectedBody)),
+		strings.TrimSpace(rr.Body.String()),
+	)
 }
 
 type testReadStruct struct {
@@ -69,56 +69,47 @@ func TestReadJSON(t *testing.T) {
 			name:          "Malformed JSON",
 			input:         `{"name": "Alice", "age":30,}`,
 			expectedError: "body contains badly-formed JSON",
-			expectedData:  nil,
 		},
 		{
 			name:          "Unknown Field",
 			input:         `{"name": "Alice", "age": 30, "unknown": "field"}`,
 			expectedError: "body contains unknown key",
-			expectedData:  nil,
 		},
 		{
 			name:          "Empty Body",
 			input:         ``,
 			expectedError: "body must not be empty",
-			expectedData:  nil,
 		},
 		{
-			name:          "Multiple top-level JSON Objects",
+			name:          "Multiple top‐level JSON Objects",
 			input:         `{"name": "Alice", "age": 30} {"name": "Bob", "age": 25}`,
 			expectedError: "body must only contain a single JSON value",
-			expectedData:  nil,
 		},
 		{
 			name:          "Exceed max bytes",
 			input:         fmt.Sprintf(`{"name": "%s", "age": 30}`, strings.Repeat("a", 1_048_577)),
 			expectedError: "body must not be larger than 1048576 bytes",
-			expectedData:  nil,
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt // capture range variable
-		t.Run(tt.name, func(t *testing.T) {
-			// Create a new request with the test input as the body.
-			req, err := http.NewRequest("POST", "/", strings.NewReader(tt.input))
-			if err != nil {
-				t.Fatalf("failed to create request: %v", err)
-			}
-			// Use ResponseRecorder as a dummy writer.
+	for _, tc := range tests {
+		tc := tc // capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			// Build request
+			req, err := http.NewRequest("POST", "/", strings.NewReader(tc.input))
+			assert.NoError(t, err)
+
 			rr := httptest.NewRecorder()
-
 			var dst testReadStruct
-			err = app.readJSON(rr, req, &dst) // WHEN
 
-			if tt.expectedError == "" {
-				assert.NilFatalError(t, err)
-				assert.Equal(t, dst, *tt.expectedData)
+			err = app.readJSON(rr, req, &dst)
+
+			if tc.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedError)
 			} else {
-				if err == nil {
-					t.Fatalf("expected error containing %q, got nil", tt.expectedError)
-				}
-				assert.StringContains(t, err.Error(), tt.expectedError)
+				assert.NoError(t, err)
+				assert.Equal(t, *tc.expectedData, dst)
 			}
 		})
 	}

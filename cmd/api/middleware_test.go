@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/garyclarke/proxy-service/internal/assert"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,22 +26,28 @@ func TestRecoverPanicMiddleware(t *testing.T) {
 	// Create a ResponseRecorder to capture the output.
 	rr := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatalf("failed to create request: %v", err)
-	}
 
-	// Serve the request.
+	// Building the *http.Request is a precondition for the rest of the test.
+	// If this fails, there’s no point continuing—all subsequent calls would panic
+	// or be meaningless. So we use require.NoError instead of assert.NoError
+	// to abort immediately on failure.
+	require.NoError(t, err, "should be able to build request")
+
+	// Invoke the middleware (which should recover the panic).
 	handler.ServeHTTP(rr, req)
 
-	// Check that the response has a 500 status code.
-	assert.Equal(t, rr.Code, http.StatusInternalServerError)
+	// It should return a 500 Internal Server Error.
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 
 	// Check the response body for a generic error message.
 	// In tests using httptest.ResponseRecorder, you don’t need to explicitly close the Body.
 	// The ResponseRecorder simulates an HTTP response and doesn’t hold any
 	// open resources that require closing.
-	assert.StringContains(t, rr.Body.String(), `{"error":"the server encountered a problem and could not process your request"}`)
+	assert.Contains(t,
+		rr.Body.String(),
+		`{"error":"the server encountered a problem and could not process your request"}`,
+	)
 
-	// Check that the "Connection" header is set to "close".
-	assert.Equal(t, rr.Header().Get("Connection"), "close")
+	// And the Connection header should be set to "close".
+	assert.Equal(t, "close", rr.Header().Get("Connection"))
 }
