@@ -14,10 +14,20 @@ func (t *Traits) SetIfNotEmpty(field string, value interface{}) *Traits {
 		if v != "" {
 			t.Traits[field] = value
 		}
-	case nil:
-		// Do nothing for nil
+	case *string:
+		if v != nil && *v != "" {
+			t.Traits[field] = *v
+		}
+	case bool:
+		t.Traits[field] = v
+	case *bool:
+		if v != nil {
+			t.Traits[field] = *v
+		}
 	default:
-		t.Traits[field] = value
+		if value != nil {
+			t.Traits[field] = value
+		}
 	}
 	return t
 }

@@ -1,4 +1,4 @@
-package identify
+package subscription
 
 import "github.com/segmentio/analytics-go"
 
