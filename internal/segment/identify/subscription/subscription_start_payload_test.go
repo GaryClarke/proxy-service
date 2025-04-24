@@ -7,10 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	identify "github.com/garyclarke/proxy-service/internal/segment/identify/subscription"
+	"github.com/garyclarke/proxy-service/internal/testutil"
 )
-
-func ptrStr(s string) *string { return &s }
-func ptrBool(b bool) *bool    { return &b }
 
 func TestSubscriptionStartPayload_ToIdentify(t *testing.T) {
 	tests := []struct {
@@ -27,9 +25,9 @@ func TestSubscriptionStartPayload_ToIdentify(t *testing.T) {
 				AccountGuid:      "acct-abc",
 				Subscribed:       true,
 				SubscriptionID:   "sub-xyz",
-				AirshipChannelID: ptrStr("chan-1"),
-				AirshipID:        ptrStr("aid-1"),
-				AutoRenewEnabled: ptrBool(false),
+				AirshipChannelID: testutil.PtrStr("chan-1"),
+				AirshipID:        testutil.PtrStr("aid-1"),
+				AutoRenewEnabled: testutil.PtrBool(false),
 			},
 			wantBrandCode: "gf",
 			wantTraits: analytics.Traits{

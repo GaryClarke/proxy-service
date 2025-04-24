@@ -1,4 +1,5 @@
-package subscription
+// Package identify contains helpers for converting payloads into Segment Identify messages.
+package identify
 
 import "github.com/segmentio/analytics-go"
 

@@ -1,3 +1,6 @@
+// Package segment provides helpers for building Segment payloads,
+// wrapping github.com/segmentio/analytics-go types and adding
+// "set only if non-empty" semantics for Traits.
 package segment
 
 import "github.com/segmentio/analytics-go"

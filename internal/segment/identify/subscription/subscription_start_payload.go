@@ -3,8 +3,12 @@ package subscription
 import (
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/segment"
+	"github.com/garyclarke/proxy-service/internal/segment/identify"
 	"github.com/segmentio/analytics-go"
 )
+
+// Compile-time assertion: ensure *SubscriptionStartPayload implements IdentifyConverter.
+var _ identify.IdentifyConverter = (*SubscriptionStartPayload)(nil)
 
 // SubscriptionStartPayload represents the data for a subscription start identify event.
 type SubscriptionStartPayload struct {

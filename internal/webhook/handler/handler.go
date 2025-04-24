@@ -1,7 +1,9 @@
+// Package handler provides abstractions for webhook dispatching.
 package handler
 
 import (
 	"context"
+
 	"github.com/garyclarke/proxy-service/internal/webhook"
 )
 

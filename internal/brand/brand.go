@@ -13,7 +13,7 @@ const (
 )
 
 // FromPlatformBrandID returns the Brand corresponding to the given platformBrandID.
-// It returns nil if no matching brand is found.
+// It returns an error if no matching brand is found.
 func FromPlatformBrandID(platformBrandID string) (Brand, error) {
 	switch platformBrandID {
 	case "uk.co.bbc.goodfood2":

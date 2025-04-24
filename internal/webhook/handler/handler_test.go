@@ -1,12 +1,15 @@
+// Package handler tests the Delegator’s behavior in dispatching to WebhookHandlers.
 package handler
 
 import (
 	"context"
 	"errors"
-	"github.com/garyclarke/proxy-service/internal/webhook"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	"github.com/garyclarke/proxy-service/internal/webhook"
 )
 
 // fakeHandler implements the WebhookHandler interface.

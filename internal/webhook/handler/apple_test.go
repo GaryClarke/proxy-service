@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/garyclarke/proxy-service/internal/brand"
 	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/testutil"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {

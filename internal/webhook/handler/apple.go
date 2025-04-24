@@ -1,15 +1,17 @@
+// Package handler contains webhook handlers for different platforms (Apple, Google, etc.).
 package handler
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/garyclarke/proxy-service/internal/brand"
 	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/event/forwarder"
 	"github.com/garyclarke/proxy-service/internal/webhook"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
-	"strings"
 )
 
 const AppleNotification = "AppleIAPNotification"
