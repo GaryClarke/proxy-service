@@ -9,3 +9,21 @@ func PtrStr(s string) *string {
 func PtrBool(b bool) *bool {
 	return &b
 }
+
+// PtrBoolFromInt returns a pointer to a bool if ip is 0 or 1, otherwise nil.
+// If ip is nil, returns nil.
+func PtrBoolFromInt(ip *int) *bool {
+	if ip == nil {
+		return nil
+	}
+	switch *ip {
+	case 0:
+		b := false
+		return &b
+	case 1:
+		b := true
+		return &b
+	default:
+		return nil
+	}
+}

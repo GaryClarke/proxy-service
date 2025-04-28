@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Mapping SubscriptionEvent to Payload</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+<h1>Branch Summary: Mapping SubscriptionEvent to Payload</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we introduced the first step of our real forwarding pipeline: translating
+    an internal <code>SubscriptionEvent</code> into the <code>SubscriptionStartPayload</code> struct
+    that the Segment Go SDK expects. To help us inspect the result, we also wired in
+    <code>go-spew</code> to dump the payload in <code>Forward</code>.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Payload mapping helper:</strong> Added
+        <code>mapToSubscriptionStartPayload(e *event.SubscriptionEvent) identify.SubscriptionStartPayload</code>
+        to encapsulate the field‐by‐field translation.
+    </li>
+    <li>
+        <strong>Forward method wiring:</strong> Updated
+        <code>AppleSubscriptionStartForwarder.Forward</code> to call the mapper,
+        then <code>spew.Dump(payload)</code> so we can visually verify everything before
+        implementing validation or HTTP dispatch.
+    </li>
+    <li>
+        <strong>Pointer casting:</strong> Re-used
+        <code>testutil.PtrBoolFromInt</code> to turn
+        <code>*int</code> renewal‐status fields into <code>*bool</code>, matching our PHP
+        <code>BooleanCaster</code> logic.
+    </li>
+</ul>
+
+<h3>mapToSubscriptionStartPayload</h3>
+<pre><code>func mapToSubscriptionStartPayload(e *event.SubscriptionEvent) identify.SubscriptionStartPayload {
+    return identify.SubscriptionStartPayload{
+      UserID:           *e.Subscription.Properties.IdentityID,
+      BrandCode:        string(e.Subscription.Brand),
+      AccountGuid:      *e.Subscription.Properties.IdentityID,
+      Subscribed:       true,
+      SubscriptionID:   e.Subscription.JwsTransaction.OriginalTransactionID,
+      AirshipChannelID: e.Subscription.AirshipChannelID,
+      AirshipID:        e.Subscription.AirshipClaim,
+      AutoRenewEnabled: testutil.PtrBoolFromInt(e.Subscription.JwsRenewalInfo.AutoRenewStatus),
+    }
+  }</code></pre>
+
+<h3>Inspecting with go-spew</h3>
+<pre><code>func (f *AppleSubscriptionStartForwarder) Forward(e *event.SubscriptionEvent) error {
+    // 1) Map
+    payload := mapToSubscriptionStartPayload(e)
+
+    // dump as a Go-style struct
+    spew.Dump(payload)
+
+    // 2) Validate
+    // 3) Send to Segment
+    return nil
+  }</code></pre>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Add table-driven unit tests for <code>mapToSubscriptionStartPayload</code>.</li>
+    <li>Implement payload validation (e.g. required fields, non-nil pointers).</li>
+    <li>Wire up the real HTTP client to push <code>analytics.Identify</code> messages to Segment.</li>
+</ul>
+
+<h2>Considerations</h2>
+<ul>
+    <li>
+        <strong>Separation of concerns:</strong> By extracting the mapping into its own function,
+        <code>Forward</code> stays focused on pipeline orchestration.
+    </li>
+    <li>
+        <strong>Early visibility:</strong> Using <code>spew.Dump</code> ensures we can manually
+        verify the exact structure before wiring external dependencies.
+    </li>
+    <li>
+        <strong>Pointer safety:</strong> Converting optional <code>*int</code> to <code>*bool</code>
+        preserves the “nil if invalid” semantics from our PHP lineage.
+    </li>
+</ul>
+</body>
+</html>
