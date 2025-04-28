@@ -10,6 +10,11 @@ func PtrBool(b bool) *bool {
 	return &b
 }
 
+// PtrInt returns a pointer to the given int.
+func PtrInt(i int) *int {
+	return &i
+}
+
 // PtrBoolFromInt returns a pointer to a bool if ip is 0 or 1, otherwise nil.
 // If ip is nil, returns nil.
 func PtrBoolFromInt(ip *int) *bool {

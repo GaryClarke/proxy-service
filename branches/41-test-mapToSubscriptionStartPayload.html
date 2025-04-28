@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Mapping SubscriptionEvent to Payload Tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Mapping SubscriptionEvent to Payload Tests</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we added a new unit test for our internal mapping function
+    <code>mapToSubscriptionStartPayload</code>, which translates an <code>event.SubscriptionEvent</code>
+    into the <code>identify.SubscriptionStartPayload</code> that we’ll eventually send to Segment.
+    We also retain the existing table-driven test for <code>Supports</code> on the
+    <code>AppleSubscriptionStartForwarder</code>.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New mapping test:</strong>
+        <code>Test_mapToSubscriptionStartPayload</code> covers three scenarios for
+        <code>JwsRenewalInfo.AutoRenewStatus</code>:
+        <ul>
+            <li><code>1 → true</code></li>
+            <li><code>0 → false</code></li>
+            <li><code>nil → nil</code></li>
+        </ul>
+        It also asserts that all other fields (UserID, BrandCode, AccountGuid, etc.)
+        are carried over correctly.
+    </li>
+    <li>
+        <strong>Table-driven style:</strong>
+        We continue our idiomatic Go pattern of struct-based, table-driven tests,
+        making it easy to add further edge cases later.
+    </li>
+    <li>
+        <strong>White-box testing:</strong>
+        Since <code>mapToSubscriptionStartPayload</code> is unexported, we test it
+        alongside the forwarder in the same package, giving us direct access.
+    </li>
+</ul>
+
+<h2>Example Test Snippet</h2>
+<pre><code>func Test_mapToSubscriptionStartPayload(t *testing.T) {
+    tests := []struct {
+        name                 string
+        autoRenewRaw         *int
+        wantAutoRenewEnabled *bool
+    }{
+        {"autoRenew=1", PtrInt(1), PtrBool(true)},
+        {"autoRenew=0", PtrInt(0), PtrBool(false)},
+        {"autoRenew=nil", nil, nil},
+    }
+
+    for _, tc := range tests {
+        t.Run(tc.name, func(t *testing.T) {
+            sub := &subnotes.Subscription{ /* …populate minimal Subscription…*/ }
+            evt := event.SubscriptionEvent{ Subscription: sub }
+            got := mapToSubscriptionStartPayload(&evt)
+
+            // verify the AutoRenewEnabled pointer logic
+            if tc.wantAutoRenewEnabled == nil {
+                assert.Nil(t, got.AutoRenewEnabled)
+            } else {
+                assert.NotNil(t, got.AutoRenewEnabled)
+                assert.Equal(t, *tc.wantAutoRenewEnabled, *got.AutoRenewEnabled)
+            }
+
+            // …other field assertions…
+        })
+    }
+}</code></pre>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>
+        With confidence in our mapping logic, we'll move on to validating the payload
+        and invoking the Segment client in <code>Forward</code>.
+    </li>
+</ul>
+
+</body>
+</html>
