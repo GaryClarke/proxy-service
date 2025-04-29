@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Enforce Validation in Forwarder</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Enforce Validation in Forwarder</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we wired up our newly-tested <code>Validate()</code> logic into the
+    <code>AppleSubscriptionStartForwarder</code>, ensuring that any invalid payloads are caught
+    before we enqueue identify calls to Segment.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Validation Invocation:</strong>
+        <pre><code>if err := payload.Validate(); err != nil {
+    return fmt.Errorf("payload validation failed: %w", err)
+}</code></pre>
+        <p>
+            This prevents malformed events from proceeding to the Segment client.
+        </p>
+    </li>
+    <li>
+        <strong>Error Propagation:</strong>
+        <ul>
+            <li>Forward now returns a wrapped error when validation fails.</li>
+            <li>Downstream handlers can translate this into a 4xx response or log it as needed.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Test Coverage:</strong>
+        <ul>
+            <li>
+                Added <code>TestSubscriptionStartPayload_Validate</code> in
+                <code>subscription_start_payload_test.go</code>, covering:
+                <ul>
+                    <li>Happy path (all required fields valid).</li>
+                    <li>Blank <code>UserID</code>, blank <code>AccountGuid</code>/<code>SubscriptionID</code>.</li>
+                    <li>Invalid <code>BrandCode</code>.</li>
+                </ul>
+            </li>
+            <li>
+                Ensured <code>AppleSubscriptionStartForwarder.Forward</code> rejects an event with an
+                invalid payload via a unit test.
+            </li>
+        </ul>
+    </li>
+</ul>
+
+</body>
+</html>
