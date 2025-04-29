@@ -44,7 +44,7 @@ func (f *AppleSubscriptionStartForwarder) Forward(e *event.SubscriptionEvent) er
 func mapToSubscriptionStartPayload(e *event.SubscriptionEvent) identify.SubscriptionStartPayload {
 	return identify.SubscriptionStartPayload{
 		UserID:           *e.Subscription.Properties.IdentityID,
-		BrandCode:        string(e.Subscription.Brand),
+		BrandCode:        e.Subscription.Brand,
 		AccountGuid:      *e.Subscription.Properties.IdentityID,
 		Subscribed:       true,
 		SubscriptionID:   e.Subscription.JwsTransaction.OriginalTransactionID,

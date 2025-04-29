@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Validating Payloads</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Validating Payloads</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we added explicit validation to our identify payloads and tightened up our use of the <code>brand.Brand</code> type throughout the mapping layer.
+    Specifically, we introduced a <code>Validate()</code> method on <code>SubscriptionStartPayload</code> using our lightweight <code>validator</code> package,
+    and switched the <code>BrandCode</code> field from a bare <code>string</code> to the <code>brand.Brand</code> alias to enforce consistency.
+</p>
+
+<h2>Key Changes</h2>
+
+<h3>1. Payload Validation</h3>
+<ul>
+    <li>Added <code>Validate()</code> to <code>SubscriptionStartPayload</code> which uses <code>validator.Validator</code> to:</li>
+    <ul>
+        <li>✔ Ensure required fields (<code>UserID</code>, <code>BrandCode</code>, <code>AccountGuid</code>, <code>SubscriptionID</code>) are non-blank.</li>
+        <li>✔ Check that <code>BrandCode</code> is one of our predefined <code>brand.AllBrands</code>.</li>
+    </ul>
+    <li>On failure, <code>Validate()</code> returns an aggregated error listing the offending fields.</li>
+</ul>
+
+<h3>2. Strongly-Typed Brand Codes</h3>
+<ul>
+    <li>Changed <code>BrandCode</code> in <code>SubscriptionStartPayload</code> from <code>string</code> to <code>brand.Brand</code>.</li>
+    <li>Updated all mapping and tests to use the <code>brand.GF</code>, <code>brand.HEX</code>, etc. constants instead of raw strings.</li>
+</ul>
+
+<h3>3. Validator Package</h3>
+<ul>
+    <li>Used <code>validator.NotBlank</code> to accept any <code>~string</code> alias via generics, so it works seamlessly with <code>brand.Brand</code>.</li>
+    <li>Leveraged <code>validator.PermittedValue</code> to enforce closed-set membership against <code>brand.AllBrands</code>.</li>
+</ul>
+
+<h2>Test Coverage</h2>
+<ul>
+    <li>All existing tests still pass after the type change and validation additions.</li>
+    <li>We’ll need to add unit tests for <code>Validate()</code> on each payload in the next branch to cover success and failure scenarios.</li>
+</ul>
+
+<h2>Considerations & Next Steps</h2>
+<ul>
+    <li><strong>Error Handling:</strong> Decide how to surface validation errors in the handler’s response or logs.</li>
+    <li><strong>Tests for <code>Validate()</code>:</strong> Create table-driven tests to cover blank fields, invalid brands, etc.</li>
+</ul>
+
+</body>
+</html>

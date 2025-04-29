@@ -2,8 +2,10 @@ package subscription
 
 import (
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/brand"
 	"github.com/garyclarke/proxy-service/internal/segment"
 	"github.com/garyclarke/proxy-service/internal/segment/identify"
+	"github.com/garyclarke/proxy-service/internal/validator"
 	"github.com/segmentio/analytics-go"
 )
 
@@ -13,7 +15,7 @@ var _ identify.IdentifyConverter = (*SubscriptionStartPayload)(nil)
 // SubscriptionStartPayload represents the data for a subscription start identify event.
 type SubscriptionStartPayload struct {
 	UserID           string
-	BrandCode        string
+	BrandCode        brand.Brand
 	AccountGuid      string
 	Subscribed       bool
 	SubscriptionID   string
@@ -35,7 +37,7 @@ func (p *SubscriptionStartPayload) ToIdentify() analytics.Identify {
 
 	c := &analytics.Context{
 		Extra: map[string]interface{}{
-			"brand_code": p.BrandCode,
+			"brand_code": string(p.BrandCode),
 		},
 	}
 
@@ -44,4 +46,24 @@ func (p *SubscriptionStartPayload) ToIdentify() analytics.Identify {
 		Traits:  t.Traits,
 		Context: c,
 	}
+}
+
+// Validate applies custom rules using the shared validator.Validator.
+//
+// - userId, brandCode, accountGuid & subscriptionId must be non‐blank.
+// - brandCode must be one of the defined allowed values
+func (p *SubscriptionStartPayload) Validate() error {
+	v := validator.Validator{}
+
+	v.CheckField(validator.NotBlank(p.UserID), "userId", "must not be blank")
+	v.CheckField(validator.NotBlank(p.BrandCode), "brandCode", "must not be blank")
+	v.CheckField(validator.PermittedValue(p.BrandCode, brand.AllBrands...),
+		"brandCode", fmt.Sprintf("must be one of %v, got %q", brand.AllBrands, p.BrandCode))
+	v.CheckField(validator.NotBlank(p.AccountGuid), "accountGuid", "must not be blank")
+	v.CheckField(validator.NotBlank(p.SubscriptionID), "subscriptionId", "must not be blank")
+
+	if !v.Valid() {
+		return fmt.Errorf("validation failed: %v", v.FieldErrors)
+	}
+	return nil
 }

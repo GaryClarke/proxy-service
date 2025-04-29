@@ -95,7 +95,7 @@ func Test_mapToSubscriptionStartPayload(t *testing.T) {
 
 			// verify all fields
 			assert.Equal(t, identityID, got.UserID)
-			assert.Equal(t, "gf", got.BrandCode)
+			assert.Equal(t, brand.GF, got.BrandCode)
 			assert.Equal(t, identityID, got.AccountGuid)
 			assert.True(t, got.Subscribed)
 			assert.Equal(t, origTransID, got.SubscriptionID)
