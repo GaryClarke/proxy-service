@@ -1,6 +1,7 @@
 package forwarder
 
 import (
+	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/garyclarke/proxy-service/internal/event"
 	identify "github.com/garyclarke/proxy-service/internal/segment/identify/subscription"
@@ -26,15 +27,18 @@ func (f *AppleSubscriptionStartForwarder) Supports(e *event.SubscriptionEvent) b
 // Real forwarding logic (e.g., mapping to a model, validating, and sending to an external service)
 // will be implemented in a future branch.
 func (f *AppleSubscriptionStartForwarder) Forward(e *event.SubscriptionEvent) error {
-	// 1) Map
+	// Map
 	payload := mapToSubscriptionStartPayload(e)
 
-	// dump as a Go-style struct
+	// Validate the mapped payload
+	if err := payload.Validate(); err != nil {
+		// Log and surface a 4xx-style error, or wrap and return
+		return fmt.Errorf("payload validation failed: %w", err)
+	}
+
 	spew.Dump(payload)
 
-	// 2) Validate
-
-	// 3) Send to Segment
+	// Send to Segment
 
 	return nil
 }

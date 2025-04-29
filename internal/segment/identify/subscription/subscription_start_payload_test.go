@@ -1,6 +1,7 @@
 package subscription_test
 
 import (
+	"github.com/garyclarke/proxy-service/internal/brand"
 	"testing"
 
 	"github.com/segmentio/analytics-go"
@@ -68,6 +69,78 @@ func TestSubscriptionStartPayload_ToIdentify(t *testing.T) {
 			assert.Equal(t, tt.wantBrandCode, got.Context.Extra["brand_code"])
 			// traits
 			assert.Equal(t, tt.wantTraits, analytics.Traits(got.Traits))
+		})
+	}
+}
+
+func TestSubscriptionStartPayload_Validate(t *testing.T) {
+	tests := []struct {
+		name       string
+		payload    identify.SubscriptionStartPayload
+		wantErr    bool
+		wantFields []string
+	}{
+		{
+			name: "happy path",
+			payload: identify.SubscriptionStartPayload{
+				UserID:         "user-123",
+				BrandCode:      "gf",
+				AccountGuid:    "acct-abc",
+				Subscribed:     true,
+				SubscriptionID: "sub-xyz",
+				// optional pointers omitted
+			},
+			wantErr: false,
+		},
+		{
+			name: "blank UserID",
+			payload: identify.SubscriptionStartPayload{
+				UserID:         "",
+				BrandCode:      brand.GF,
+				AccountGuid:    "acct-abc",
+				Subscribed:     true,
+				SubscriptionID: "sub-xyz",
+			},
+			wantErr:    true,
+			wantFields: []string{"userId"},
+		},
+		{
+			name: "invalid BrandCode",
+			payload: identify.SubscriptionStartPayload{
+				UserID:         "user-123",
+				BrandCode:      "invalid-brand",
+				AccountGuid:    "acct-abc",
+				Subscribed:     true,
+				SubscriptionID: "sub-xyz",
+			},
+			wantErr:    true,
+			wantFields: []string{"brandCode"},
+		},
+		{
+			name: "blank AccountGuid and SubscriptionID",
+			payload: identify.SubscriptionStartPayload{
+				UserID:         "user-123",
+				BrandCode:      brand.GF,
+				AccountGuid:    "",
+				Subscribed:     true,
+				SubscriptionID: "",
+			},
+			wantErr:    true,
+			wantFields: []string{"accountGuid", "subscriptionId"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.payload.Validate()
+			if tt.wantErr {
+				assert.Error(t, err, "expected validation to fail")
+				for _, field := range tt.wantFields {
+					assert.Contains(t, err.Error(), field, "error should mention field %q", field)
+				}
+			} else {
+				assert.NoError(t, err, "expected validation to pass")
+			}
 		})
 	}
 }

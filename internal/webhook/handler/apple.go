@@ -45,7 +45,7 @@ func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Event:", subEvent.Subscription)
+	//fmt.Println("Event:", subEvent.Subscription)
 
 	// Forward the event using the appropriate forwarder.
 	for _, f := range h.forwarders {
