@@ -42,8 +42,10 @@ func newTestApplication(t *testing.T, debug bool) *application {
 
 	return &application{
 		config: config{
-			env:       "testing",
-			debugMode: debug,
+			env:             "testing",
+			debugMode:       debug,
+			segmentKey:      "segment-key",
+			segmentEndpoint: "https://segment-endpoint",
 		},
 		logger:           logger,
 		handlerDelegator: handlerDelegator,

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Env Vars</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Env Vars</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch centralizes environment-based configuration, allowing the application to read from a local <code>.env</code> in development and from real environment variables in preprod and production.
+    We introduced <code>github.com/joho/godotenv</code> for local overrides, added helpers <code>getEnv</code> and <code>getEnvInt</code>, and updated the <code>config</code> struct and flag wiring accordingly.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Load .env in Development:</strong>
+        <pre><code>_ = godotenv.Load()</code></pre>
+        <p>
+            Integrates <code>.env</code> file values into <code>os.Getenv</code> for local/dev without crashing when the file is missing.
+        </p>
+    </li>
+    <li>
+        <strong>Helper Functions:</strong>
+        <pre><code>func getEnv(key, fallback string) string {…}
+func getEnvInt(key string, fallback int) int {…}
+        </code></pre>
+        <p>
+            Provide safe defaults and warning logs for missing or malformed env-vars.
+        </p>
+    </li>
+    <li>
+        <strong>Extended Config Struct:</strong>
+        <pre><code>type config struct {
+    port            int
+    env             string
+    debugMode       bool
+    dbDsn           string
+    segmentKey      string
+    segmentEndpoint string
+}</code></pre>
+        <p>
+            Now includes <code>DATABASE_DSN</code>, <code>SEGMENT_WRITE_KEY</code>, and <code>SEGMENT_ENDPOINT</code>.
+        </p>
+    </li>
+    <li>
+        <strong>Flags with Env Defaults:</strong>
+        <pre><code>flag.StringVar(&cfg.dbDsn, "db-dsn", getEnv("DATABASE_DSN", ""), "PostgreSQL DSN")
+flag.IntVar(&cfg.port, "port", getEnvInt("PORT", 4000), "API server port")</code></pre>
+        <p>
+            Command-line flags override environment variables when provided.
+        </p>
+    </li>
+    <li>
+        <strong>.env Management:</strong>
+        <ul>
+            <li>Add <code>.env</code> to <code>.gitignore</code>.</li>
+            <li>Commit a <code>.env.example</code> listing required keys without secrets:</li>
+            <pre><code>PORT=4000
+ENV=development
+DATABASE_DSN=
+SEGMENT_WRITE_KEY=
+SEGMENT_ENDPOINT=https://events.eu1.segmentapis.com</code></pre>
+        </ul>
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Remove any temporary debug dumps after verifying env-vars in dev and test.</li>
+    <li>Proceed with implementing the <code>segment.Client</code> injection and forwarding logic.</li>
+    <li>Ensure CI/CD and production deployments inject the required env-vars (no <code>.env</code> file needed).</li>
+</ul>
+
+</body>
+</html>
