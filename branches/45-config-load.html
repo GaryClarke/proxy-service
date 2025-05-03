@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Refactor Config Load</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Refactor Config Load</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch takes a bit of a detour to pull all environment- and flag-based configuration into a new <code>internal/config</code> package.
+    We introduced <code>config.Load()</code> to replace the ad-hoc flag parsing in <code>main.go</code>,
+    centralized defaults (via <code>getEnv</code> and <code>getEnvInt</code>), and added a <code>Version</code> field.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New <code>internal/config/config.go</code>:</strong>
+        <pre><code>type Config struct {
+    DebugMode       bool
+    Env             string
+    Port            int
+    SegmentKey      string
+    SegmentEndpoint string
+    Version         string
+}
+
+func Load() Config {
+    _ = godotenv.Load()
+    // flags defaulted from env-vars
+    flag.IntVar(&cfg.Port, "port", getEnvInt("PORT", 4000), "HTTP server port")
+    flag.StringVar(&cfg.Env, "env", getEnv("ENV", "development"), "Environment")
+    flag.StringVar(&cfg.SegmentKey, "segment-key", getEnv("SEGMENT_SUBSCRIPTION_WRITE_KEY", ""), "Segment write key")
+    flag.StringVar(&cfg.SegmentEndpoint, "segment-endpoint", getEnv("SEGMENT_ENDPOINT", defaultEndpoint), "Segment API endpoint")
+    flag.Parse()
+    if cfg.SegmentKey == "" {
+        log.Fatal("SEGMENT_SUBSCRIPTION_WRITE_KEY or -segment-key must be set")
+    }
+    cfg.Version = "1.0.0"
+    return cfg
+}</code></pre>
+    </li>
+    <li>
+        <strong>Helper functions:</strong>
+        <pre><code>func getEnv(key, fallback string) string { … }
+func getEnvInt(key string, fallback int) int { … }</code></pre>
+        <p>
+            Provide safe defaults and warning logs for missing or malformed environment values.
+        </p>
+    </li>
+    <li>
+        <strong>Updated <code>cmd/api/main.go</code>:</strong>
+        <pre><code>cfg := config.Load()
+logger := slog.New(…)
+app := &application{config: cfg, …}
+srv := &http.Server{
+    Addr:    fmt.Sprintf(":%d", cfg.Port),
+    Handler: app.routes(),
+    …
+}
+logger.Info("starting server", "addr", srv.Addr, "env", cfg.Env)
+srv.ListenAndServe()</code></pre>
+        <p>
+            Removed inline flag/env parsing; now uses the centralized <code>config</code> package.
+        </p>
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Add unit tests for <code>config.Load()</code> to verify flag and env-var behavior.</li>
+    <li>Extract dependency wiring into an <code>internal/app</code> or <code>bootstrap</code> package in the next branch.</li>
+    <li>Wire in the <code>Segment</code> client and inject it into the forwarders.</li>
+</ul>
+
+</body>
+</html>

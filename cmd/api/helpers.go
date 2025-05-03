@@ -126,7 +126,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 }
 
 func (app *application) logHeaders(r *http.Request) {
-	if app.config.debugMode {
+	if app.config.DebugMode {
 		for name, values := range r.Header {
 			for _, value := range values {
 				app.logger.Info("header", "name", name, "value", value)
