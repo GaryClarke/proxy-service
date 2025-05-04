@@ -17,7 +17,7 @@
 
 <h2>Overview</h2>
 <p>
-    This branch takes a bit of a detour to pull all environment- and flag-based configuration into a new <code>internal/config</code> package.
+    This branch takes a bit of a detour to pull all environment, and flag-based configuration into a new <code>internal/config</code> package.
     We introduced <code>config.Load()</code> to replace the ad-hoc flag parsing in <code>main.go</code>,
     centralized defaults (via <code>getEnv</code> and <code>getEnvInt</code>), and added a <code>Version</code> field.
 </p>
