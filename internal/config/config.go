@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -18,35 +19,51 @@ type Config struct {
 	Version         string
 }
 
-func Load() Config {
-	// 1) In dev, read .env into os.Environ
+// LoadWithArgs parses flags out of the provided args slice,
+// falling back to env-vars (and defaults) when a flag isn’t set.
+func LoadWithArgs(args []string) (Config, error) {
+	// 1) In dev, load .env (no-op if missing)
 	_ = godotenv.Load()
 
 	var cfg Config
+	fs := flag.NewFlagSet("proxy-service", flag.ContinueOnError)
 
-	// 2) Declare your flags, defaulting from env-vars
-	flag.IntVar(&cfg.Port, "port",
+	// 2) Register exactly the flags you want, with env-var defaults
+	fs.IntVar(&cfg.Port, "port",
 		getEnvInt("PORT", 4000),
 		"HTTP server port")
-	flag.StringVar(&cfg.Env, "env",
+	fs.StringVar(&cfg.Env, "env",
 		getEnv("ENV", "development"),
 		"Environment (development|staging|production)")
-	flag.StringVar(&cfg.SegmentKey, "segment-key",
+	fs.StringVar(&cfg.SegmentKey, "segment-key",
 		getEnv("SEGMENT_SUBSCRIPTION_WRITE_KEY", ""),
 		"Segment write key")
-	flag.StringVar(&cfg.SegmentEndpoint, "segment-endpoint",
+	fs.StringVar(&cfg.SegmentEndpoint, "segment-endpoint",
 		getEnv("SEGMENT_ENDPOINT", "https://events.eu1.segmentapis.com"),
 		"Segment API endpoint")
-	flag.Parse()
 
-	// 3) Validate required settings
-	if cfg.SegmentKey == "" {
-		log.Fatal("SEGMENT_SUBSCRIPTION_WRITE_KEY or -segment-key must be set")
+	// 3) Parse only the args passed in (no -test.* flags or any global flags)
+	if err := fs.Parse(args); err != nil {
+		return Config{}, err
 	}
 
-	// todo Later generate this automatically at build time
-	cfg.Version = "1.0.0"
+	// 4) Validate required
+	if cfg.SegmentKey == "" {
+		return Config{}, fmt.Errorf("SEGMENT_SUBSCRIPTION_WRITE_KEY or -segment-key must be set")
+	}
 
+	// 5) Populate Version (or later via ldflags)
+	cfg.Version = "1.0.0"
+	return cfg, nil
+}
+
+// Load is the convenience wrapper for real runs.
+// It parses os.Args[1:] and fatals on error.
+func Load() Config {
+	cfg, err := LoadWithArgs(os.Args[1:])
+	if err != nil {
+		log.Fatal(err)
+	}
 	return cfg
 }
 

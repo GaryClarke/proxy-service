@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Testing Config</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Testing Config</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we enhanced our configuration loader to make it fully testable and wrote a suite of unit tests.
+    We introduced a new <code>LoadWithArgs</code> function that parses flags from an explicit argument slice,
+    updated <code>Load</code> to delegate to it, and replaced global-flag–based tests with direct calls to <code>LoadWithArgs</code>.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Added <code>LoadWithArgs([]string) (Config, error)</code>:</strong>
+        <ul>
+            <li>Registers only the flags we care about on its own <code>flag.FlagSet</code>.</li>
+            <li>Parses exactly the <code>args</code> slice passed in, avoiding any <code>-test.*</code> flags or global state.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Updated <code>Load()</code> to call <code>LoadWithArgs(os.Args[1:])</code>:</strong>
+        <ul>
+            <li>Keeps the existing behavior in <code>main.go</code> while delegating parsing and error handling.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Removed <code>resetFlags()</code> and <code>os.Args</code> hacks from tests:</strong>
+        <ul>
+            <li>Tests now call <code>LoadWithArgs</code> directly with controlled flag slices.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>New tests in <code>internal/config/config_test.go</code>:</strong>
+        <ul>
+            <li><code>TestLoadWithArgs_Defaults</code>: no flags, only env-vars & defaults.</li>
+            <li><code>TestLoadWithArgs_FlagsOverrideEnv</code>: flags override environment settings.</li>
+            <li><code>TestLoadWithArgs_InvalidPortEnv</code>: malformed <code>PORT</code> falls back to default.</li>
+            <li><code>TestLoadWithArgs_MissingRequired</code>: missing <code>SEGMENT_SUBSCRIPTION_WRITE_KEY</code> returns an error.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Why This Change?</h2>
+<ul>
+    <li>
+        The global <code>flag</code> package picks up the Go test harness’s <code>-test.*</code> flags and causes parse failures.
+    </li>
+    <li>
+        By using a scoped <code>FlagSet</code>, we isolate our own flags and make <code>config</code> parsing a pure function.
+    </li>
+    <li>
+        This makes tests simpler, more reliable, and free of global state side effects.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>
+        Proceed with extracting the application bootstrap into an <code>internal/app</code> (or <code>bootstrap</code>) package.
+    </li>
+    <li>
+        Wire in the <code>segment.Client</code> interface and write unit tests for the forwarder using a spy client.
+    </li>
+    <li>
+        Add integration tests for the HTTP handler once the app bootstrap is in place.
+    </li>
+</ul>
+
+</body>
+</html>
