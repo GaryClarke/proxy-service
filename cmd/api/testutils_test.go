@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/garyclarke/proxy-service/internal/config"
 	"github.com/garyclarke/proxy-service/internal/event/forwarder"
 	"github.com/garyclarke/proxy-service/internal/webhook/handler"
 	"io"
@@ -41,11 +42,11 @@ func newTestApplication(t *testing.T, debug bool) *application {
 	handlerDelegator := handler.NewHandlerDelegator(appleHandler)
 
 	return &application{
-		config: config{
-			env:             "testing",
-			debugMode:       debug,
-			segmentKey:      "segment-key",
-			segmentEndpoint: "https://segment-endpoint",
+		config: config.Config{
+			Env:             "testing",
+			DebugMode:       debug,
+			SegmentKey:      "segment-key",
+			SegmentEndpoint: "https://segment-endpoint",
 		},
 		logger:           logger,
 		handlerDelegator: handlerDelegator,

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: App Bootstrap</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: App Bootstrap</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch pulls the application wiring out of <code>main.go</code> into a dedicated
+    <code>cmd/api/app.go</code> file, grouping the startup logic (config, logger, handlers, server)
+    into <code>newApplication</code> and <code>Serve</code> methods. We keep the refactor within the
+    <code>cmd/api</code> package for minimal disruption.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New file <code>cmd/api/app.go</code>:</strong>
+        <ul>
+            <li>Introduces the <code>application</code> struct (config, logger, handlerDelegator).</li>
+            <li>Implements <code>newApplication(cfg Config) (*application, error)</code> for DI.</li>
+            <li>Implements <code>(app *application) Serve() error</code> to configure and run <code>http.Server</code>.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Modified <code>cmd/api/main.go</code>:</strong>
+        <ul>
+            <li>Replaced inline wiring with:</li>
+            <pre><code>cfg := config.Load()
+app, err := newApplication(cfg)
+if err != nil { log.Fatalf("init failed: %v", err) }
+if err := app.Serve(); err != nil {
+    app.logger.Error("server error", "err", err)
+    os.Exit(1)
+}</code></pre>
+            <li>Now main.go only: load config, create app, serve.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Unchanged <code>cmd/api/testutils_test.go</code> construction:</strong>
+        <ul>
+            <li><code>newTestApplication</code> still manually constructs the <code>application</code> struct inline
+                (config literals, logger, delegator) to support route-level tests.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Why This Approach?</h2>
+<ul>
+    <li>We considered moving <code>application</code> into an <code>internal/app</code> package,
+        but opted for a smaller scoped change by simply splitting into <code>app.go</code> within <code>cmd/api</code>.</li>
+    <li>This keeps <code>main.go</code> ultra-thin while grouping startup logic coherently.</li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Implement the <code>segment.Client</code> interface, inject it into forwarders, and write spy-client tests.</li>
+</ul>
+
+</body>
+</html>
