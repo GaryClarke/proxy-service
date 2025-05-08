@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 48-segment-client</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 48-segment-client</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch introduces a swappable Segment client abstraction so we can
+    send <code>Identify</code> and <code>Track</code> calls in production, and
+    inject a spy in tests without making real HTTP requests.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New interface</strong> in <code>internal/segment/client.go</code>:
+        <pre><code>type Client interface {
+    Identify(msg analytics.Identify) error
+    Track(msg analytics.Track) error
+}</code></pre>
+    </li>
+    <li>
+        <strong>Concrete implementation</strong> in <code>internal/segment/segment_client.go</code>:
+        <pre><code>func NewClient(writeKey, endpoint string) (Client, error) {
+    c, err := analytics.NewWithConfig(writeKey, analytics.Config{Endpoint: endpoint})
+    if err != nil {
+        return nil, err
+    }
+    return &analyticsClient{client: c}, nil
+}</code></pre>
+        <p>
+            We return the <code>Client</code> interface rather than the concrete
+            <code>*analyticsClient</code> to keep callers decoupled and allow future
+            swaps (e.g. retry wrappers, buffered or mock clients) without changing
+            call sites.
+        </p>
+    </li>
+    <li>
+        <strong>Forwarder constructor updated</strong> (next):
+        will accept a <code>segment.Client</code> so tests can inject a spy.
+    </li>
+</ul>
+
+<h2>Why Return the Interface?</h2>
+<ul>
+    <li><strong>Encapsulation:</strong> Callers only see the methods they need, not the underlying type.</li>
+    <li><strong>Decoupling:</strong> Production code depends on the interface; tests can supply any implementation.</li>
+    <li><strong>Future flexibility:</strong> Swap in retrying, batching, or mock implementations without impacting callers.</li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Wire the real client into <code>newApplication</code> using <code>cfg.SegmentKey</code> & <code>cfg.SegmentEndpoint</code>.</li>
+    <li>Refactor <code>AppleSubscriptionStartForwarder</code> to accept a <code>segment.Client</code>.</li>
+    <li>Implement a <code>SpyClient</code> in tests to record <code>Identify</code> calls and write unit tests for <code>Forward</code>.</li>
+</ul>
+
+</body>
+</html>
