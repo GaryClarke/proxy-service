@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Forwarder Segment Client Injection</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Forwarder Segment Client Injection</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we refactored <code>AppleSubscriptionStartForwarder</code> to depend on the
+    new <code>segment.Client</code> interface. We added a constructor that takes a client,
+    removed the placeholder <code>spew.Dump</code>, and implemented the real
+    <code>Identify</code> call in <code>Forward</code>.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Constructor added:</strong>
+        <pre><code>func NewAppleSubscriptionStartForwarder(client segment.Client) *AppleSubscriptionStartForwarder</code></pre>
+        <p>
+            The forwarder now holds a <code>segment.Client</code>, making it easy to inject
+            the real client in production and a spy in tests.
+        </p>
+    </li>
+    <li>
+        <strong>Struct updated:</strong>
+        <pre><code>type AppleSubscriptionStartForwarder struct {
+    client segment.Client
+}</code></pre>
+    </li>
+    <li>
+        <strong><code>Forward</code> method implemented:</strong>
+        <pre><code>func (f *AppleSubscriptionStartForwarder) Forward(...) error {
+    payload := mapToSubscriptionStartPayload(e)
+    if err := payload.Validate(); err != nil {
+        return fmt.Errorf("payload validation failed: %w", err)
+    }
+    if err := f.client.Identify(payload.ToIdentify()); err != nil {
+        return fmt.Errorf("segment identify failed: %w", err)
+    }
+    return nil
+}</code></pre>
+        <p>
+            Replaces the stub and <code>spew.Dump</code> with real mapping, validation,
+            and a call to <code>Identify</code> on the injected client.
+        </p>
+    </li>
+</ul>
+
+<h2>Why This Change?</h2>
+<ul>
+    <li>
+        Decouples forwarding logic from the concrete Segment SDK, allowing easy
+        substitution of a spy implementation in tests.
+    </li>
+    <li>
+        Prepares the ground for wiring the real client in <code>newApplication</code>
+        and writing unit tests for <code>Forward</code>.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>
+        Implement a <code>SpyClient</code> in tests to record <code>Identify</code> calls
+        and add unit tests for <code>AppleSubscriptionStartForwarder.Forward</code>.
+    </li>
+    <li>
+        Wire the real <code>segment.Client</code> into <code>newApplication</code> using
+        <code>cfg.SegmentKey</code> and <code>cfg.SegmentEndpoint</code>.
+    </li>
+</ul>
+
+</body>
+</html>
