@@ -47,6 +47,7 @@ func newTestApplication(t *testing.T, debug bool) *application {
 			DebugMode:       debug,
 			SegmentKey:      "segment-key",
 			SegmentEndpoint: "https://segment-endpoint",
+			Version:         "1.0.0",
 		},
 		logger:           logger,
 		handlerDelegator: handlerDelegator,
