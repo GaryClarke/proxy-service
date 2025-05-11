@@ -4,11 +4,29 @@ import (
 	"github.com/garyclarke/proxy-service/internal/brand"
 	"github.com/garyclarke/proxy-service/internal/testutil"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
+	"github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/garyclarke/proxy-service/internal/event"
 )
+
+// SpyClient records Identify and Track calls for assertions.
+type SpyClient struct {
+	Identifies []analytics.Identify
+	Tracks     []analytics.Track
+}
+
+func (s *SpyClient) Identify(msg analytics.Identify) error {
+	s.Identifies = append(s.Identifies, msg)
+	return nil
+}
+
+func (s *SpyClient) Track(msg analytics.Track) error {
+	s.Tracks = append(s.Tracks, msg)
+	return nil
+}
 
 // TestAppleSubscriptionStartForwarder_Supports verifies that the Supports method
 // returns true when the event category matches CategoryStart and false otherwise.
@@ -49,6 +67,46 @@ func TestAppleSubscriptionStartForwarder_Supports(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAppleSubscriptionStartForwarder_Forward(t *testing.T) {
+	// Arrange: create a spy and a forwarder with it
+	spy := &SpyClient{}
+	fwd := NewAppleSubscriptionStartForwarder(spy)
+
+	// Build a minimal SubscriptionEvent
+	evt := &event.SubscriptionEvent{
+		Category: CategoryStart,
+		Subscription: &subnotes.Subscription{
+			Properties: subnotes.SubscriptionProperties{
+				IdentityID: testutil.PtrStr("user-123"),
+			},
+			JwsTransaction: &subnotes.JwsTransaction{
+				OriginalTransactionID: "sub-abc",
+			},
+			AirshipChannelID: testutil.PtrStr("chan-1"),
+			AirshipClaim:     testutil.PtrStr("aid-1"),
+			JwsRenewalInfo: &subnotes.JwsRenewalInfo{
+				AutoRenewStatus: testutil.PtrInt(1),
+			},
+			Brand: brand.GF,
+		},
+	}
+
+	// Act
+	err := fwd.Forward(evt)
+
+	// Assert
+	require.NoError(t, err, "Forward should not return an error")
+	assert.Len(t, spy.Identifies, 1, "should have sent exactly one Identify call")
+
+	got := spy.Identifies[0]
+	// Check basic fields
+	assert.Equal(t, "user-123", got.UserId)
+	// Check a couple of traits set by the payload
+	tr := got.Traits
+	assert.Equal(t, "user-123", tr["acc_gf_guid"])
+	assert.Equal(t, true, tr["app_gf_sub"])
 }
 
 func Test_mapToSubscriptionStartPayload(t *testing.T) {

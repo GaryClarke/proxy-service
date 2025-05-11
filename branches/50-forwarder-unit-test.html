@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: Forwarder Unit Test</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: Forwarder Unit Test</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we added a focused unit test for <code>AppleSubscriptionStartForwarder.Forward</code>.
+    The test uses a <strong>SpyClient</strong> implementing the <code>segment.Client</code> interface
+    to capture and assert on calls to <code>Identify</code> without making real HTTP requests.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New test file:</strong>
+        <code>internal/event/forwarder/apple_subscription_start_forwarder_test.go</code>
+        Defines:
+        <pre><code>// SpyClient records Identify calls
+type SpyClient struct {
+    Identifies []analytics.Identify
+}
+func (s *SpyClient) Identify(msg analytics.Identify) error {
+    s.Identifies = append(s.Identifies, msg)
+    return nil
+}
+</code></pre>
+    </li>
+    <li>
+        <strong>Test setup:</strong>
+        Constructs a minimal <code>SubscriptionEvent</code> with:
+        <ul>
+            <li><code>Category: forwarder.CategoryStart</code></li>
+            <li><code>subnotes.Subscription</code> DTO populated via <code>testutil.PtrStr</code> and <code>testutil.PtrInt</code></li>
+            <li><code>Brand: brand.GF</code> on the inner struct</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Assertions:</strong>
+        <ul>
+            <li><code>Forward(evt)</code> returns no error</li>
+            <li>Exactly one call was recorded in <code>spy.Identifies</code></li>
+            <li>The captured <code>Identify</code> message has the expected <code>UserId</code> and trait keys (e.g. <code>acc_gf_guid</code>, <code>app_gf_sub</code>)</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Why This Change?</h2>
+<ul>
+    <li>
+        Validates the core mapping, validation, and client-invocation logic of the forwarder
+        in isolation, without external dependencies.
+    </li>
+    <li>
+        Provides quick feedback and confidence before integrating with the real Segment client.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>
+        <strong>Inject <code>SpyClient</code> into <code>newTestApplication</code>:</strong>
+        <ul>
+            <li>Change <code>newTestApplication</code> signature to accept a <code>segment.Client</code>.</li>
+            <li>Pass a <code>spy := &SpyClient{}</code> into <code>newTestApplication(t, false, spy)</code>.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Assert on Identify calls in <code>TestWebhookHandler_AppleScenarios</code>:</strong>
+        <ul>
+            <li>Add an <code>expectedIdentify</code> field to each test case.</li>
+            <li>After <code>ts.postJSON</code>, do:
+                <pre><code>assert.Len(t, spy.Identifies, 1)
+assert.Equal(t, tc.expectedIdentify, spy.Identifies[0])</code></pre>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <strong>Wire the real <code>segment.Client</code> in <code>newApplication</code>:</strong>
+        <ul>
+            <li>Call <code>segment.NewClient(cfg.SegmentKey, cfg.SegmentEndpoint)</code>.</li>
+            <li>Pass that client into <code>NewAppleSubscriptionStartForwarder</code> for production.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Future end-to-end tests:</strong>
+        <ul>
+            <li>Optionally launch the full binary against a mocked Segment endpoint.</li>
+            <li>For now, the "spy + <code>app.routes()</code>" approach covers HTTP routing through to Identify calls without real network I/O.</li>
+        </ul>
+    </li>
+</ul>
+
+
+</body>
+</html>
