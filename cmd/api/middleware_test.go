@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/garyclarke/proxy-service/internal/segment"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -15,7 +16,7 @@ func dummyHandler(w http.ResponseWriter, r *http.Request) {
 
 func TestRecoverPanicMiddleware(t *testing.T) {
 	// Create a dummy application instance.
-	app := newTestApplication(t, false)
+	app := newTestApplication(t, false, &segment.SpyClient{})
 
 	// Wrap the dummy handler with the recoverPanic middleware.
 	// The HandlerFunc type is an adapter to allow the use of

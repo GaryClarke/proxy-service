@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/segment"
+	"github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -11,7 +13,7 @@ import (
 
 func TestHealthcheckHandler(t *testing.T) {
 	// Create a new instance of our application struct.
-	app := newTestApplication(t, false)
+	app := newTestApplication(t, false, &segment.SpyClient{})
 
 	// create a new test server
 	ts := newTestServer(t, app.routes())
@@ -51,10 +53,10 @@ func TestHealthcheckHandler(t *testing.T) {
 func TestWebhookHandler_AppleScenarios(t *testing.T) {
 	// Define a set of test cases for various Apple subscription scenarios.
 	tests := []struct {
-		name           string
-		payload        string
-		expectedStatus int
-		//expectedIdentify interface{} // Replace with your concrete type
+		name             string
+		payload          string
+		expectedStatus   int
+		expectedIdentify analytics.Identify
 		//expectedTrack    interface{} // Replace with your concrete type
 		// Optionally, expected error message etc.
 	}{
@@ -69,25 +71,41 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 				1,
 			),
 			expectedStatus: http.StatusNoContent,
-			// expectedIdentify: expectedIdentifySubStartModel(true), // Your helper function
+			expectedIdentify: expectedIdentifySubStartModel(
+				"909365ca-7d09-457d-8f5e-433885a25573", // UserID:Subscription.Properties.IdentityID
+				"gf",                                   // Derived
+				"909365ca-7d09-457d-8f5e-433885a25573", // AccountGuid:Subscription.Properties.IdentityID
+				"100000123456789",                      // SubscriptionID:Subscription.JwsTransaction.OriginalTransactionID
+				true,                                   // Derived
+				true,                                   // AutoRenewEnabled:Subscription.JwsRenewalInfo.AutoRenewStatus
+				"test-airship-channel",                 // AirshipChannelID:Subscription.AirshipChannelID
+				"test-airship-id",                      // AirshipID:Subscription.AirshipClaim
+			),
 			// expectedTrack:    expectedTrackModel("SUB_EVENT_STARTED", "Subscriber", false),
 		},
 	}
 
-	// Create your test server using the application's routes.
-	app := newTestApplication(t, false)
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
-
 	for _, tt := range tests {
 		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
+			// 1) fresh spy, app, and test server per test
+			spy := &segment.SpyClient{}
+			app := newTestApplication(t, false, spy)
+			ts := newTestServer(t, app.routes())
+			defer ts.Close()
+
+			// 2) exercise endpoint
 			code, _, _ := ts.postJSON(t, "/webhook", tt.payload)
 
 			// Check the HTTP status code.
-			if code != tt.expectedStatus {
-				t.Errorf("expected status %d; got %d", tt.expectedStatus, code)
-			}
+			assert.Equal(t, tt.expectedStatus, code)
+
+			// 3) assert Identify was called correctly
+			assert.Len(t, spy.Identifies, 1)
+			got := spy.Identifies[0]
+			assert.Equal(t, tt.expectedIdentify, got)
+
+			// 4) assert Track was called correctly
 
 			// Next, you can assert that your mock segment client (or any other dependency)
 			// was called with the expected identify and track models.
@@ -104,6 +122,33 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 			// These functions would be part of your fake/mock segment client that you inject
 			// into your application for testing.
 		})
+	}
+}
+
+func expectedIdentifySubStartModel(
+	userID, brandCode, accountGuid, subscriptionID string,
+	subscribed, autoRenew bool,
+	airshipChannelID, airshipID string,
+) analytics.Identify {
+	// replicate the logic in ToIdentify()
+	t := &segment.Traits{Traits: make(analytics.Traits)}
+	t.SetIfNotEmpty(fmt.Sprintf("acc_%s_guid", brandCode), accountGuid)
+	t.SetIfNotEmpty(fmt.Sprintf("app_%s_sub", brandCode), subscribed)
+	t.SetIfNotEmpty(fmt.Sprintf("app_%s_sub_id", brandCode), subscriptionID)
+	t.SetIfNotEmpty(fmt.Sprintf("app_%s_auto_renew_status", brandCode), autoRenew)
+	t.SetIfNotEmpty(fmt.Sprintf("%s_airship_channel_id", brandCode), airshipChannelID)
+	t.SetIfNotEmpty(fmt.Sprintf("acc_%s_airship_id", brandCode), airshipID)
+
+	ctx := &analytics.Context{
+		Extra: map[string]interface{}{
+			"brand_code": brandCode,
+		},
+	}
+
+	return analytics.Identify{
+		UserId:  userID,
+		Traits:  t.Traits,
+		Context: ctx,
 	}
 }
 

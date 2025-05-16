@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/garyclarke/proxy-service/internal/config"
 	"github.com/garyclarke/proxy-service/internal/event/forwarder"
+	"github.com/garyclarke/proxy-service/internal/segment"
 	"github.com/garyclarke/proxy-service/internal/webhook/handler"
 	"io"
 	"log/slog"
@@ -28,7 +29,7 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 
 // newTestApplication returns an instance of the
 // application struct containing mocked dependencies.
-func newTestApplication(t *testing.T, debug bool) *application {
+func newTestApplication(t *testing.T, debug bool, segmentClient segment.Client) *application {
 	var logger *slog.Logger
 	if debug {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -36,9 +37,9 @@ func newTestApplication(t *testing.T, debug bool) *application {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 
-	// Initialize the WebhookHandlers and initialize the delegator
-	appleHandler := handler.NewAppleHandler([]forwarder.EventForwarder{&forwarder.AppleSubscriptionStartForwarder{}})
-
+	fwd := forwarder.NewAppleSubscriptionStartForwarder(segmentClient)
+	forwarders := []forwarder.EventForwarder{fwd}
+	appleHandler := handler.NewAppleHandler(forwarders)
 	handlerDelegator := handler.NewHandlerDelegator(appleHandler)
 
 	return &application{

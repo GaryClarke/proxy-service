@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/segment"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestWriteJSON(t *testing.T) {
-	app := newTestApplication(t, false)
+	app := newTestApplication(t, false, &segment.SpyClient{})
 
 	// ResponseRecorder captures the response.
 	rr := httptest.NewRecorder()
@@ -51,7 +52,7 @@ type testReadStruct struct {
 }
 
 func TestReadJSON(t *testing.T) {
-	app := newTestApplication(t, false)
+	app := newTestApplication(t, false, &segment.SpyClient{})
 
 	tests := []struct {
 		name          string

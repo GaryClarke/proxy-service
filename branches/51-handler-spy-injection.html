@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 51-handler-spy-injection</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 51-handler-spy-injection</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch wires our <code>SpyClient</code> into the webhook handler tests, letting us
+    exercise end-to-end behavior (HTTP POST → <code>Identify</code> call) without real network I/O.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Test helper updated</strong> (<code>newTestApplication</code> in <code>cmd/api/testutils_test.go</code>):
+        <pre><code>func newTestApplication(t *testing.T, debug bool, segmentClient segment.Client) *application</code></pre>
+        Now accepts a <code>segment.Client</code>, so tests can inject the <code>SpyClient</code>.
+    </li>
+    <li>
+        <strong>Handler test refactored</strong> (<code>TestWebhookHandler_AppleScenarios</code>):
+        <ul>
+            <li>Move <code>spy := &segment.SpyClient{}</code>, <code>app := newTestApplication(..., spy)</code>,
+                and <code>ts := newTestServer(...)</code> into each <code>t.Run</code> subtest.</li>
+            <li>After <code>ts.postJSON</code>, assert:
+                <pre><code>assert.Len(t, spy.Identifies, 1)
+assert.Equal(t, tt.expectedIdentify, spy.Identifies[0])</code></pre>
+            </li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Why We Did This</h2>
+<ul>
+    <li>
+        By creating a fresh spy and app inside each <code>t.Run</code>, we get per-case isolation:
+        state from one scenario can’t leak into the next. This is analogous to PHPUnit’s
+        <code>setUp()</code> running before each data-provider iteration.
+    </li>
+    <li>
+        Tests now truly cover “HTTP in → mapping → <code>Identify</code> out” without external dependencies.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Run the handler tests to confirm full coverage of <code>Identify</code> calls.</li>
+    <li>Wire the real <code>segment.Client</code> into <code>newApplication</code> for production.</li>
+    <li>Consider pulling pointer-helper functions out of <code>testutil</code> into a dedicated
+        <code>internal/pointer</code> package in a future branch.</li>
+</ul>
+
+</body>
+</html>
