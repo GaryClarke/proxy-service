@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 52-wire-real-segment-client</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 52-wire-real-segment-client</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we replaced the test‐only spy with the real Segment SDK client in our
+    production bootstrap (<code>newApplication</code>), so that in real runs events are sent
+    to Segment’s API endpoint configured via <code>cfg.SegmentKey</code> and <code>cfg.SegmentEndpoint</code>.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Real client initialization</strong> in <code>cmd/api/app.go</code>:
+        <pre><code>segmentClient, err := segment.NewClient(
+    cfg.SegmentKey,
+    cfg.SegmentEndpoint,
+)
+if err != nil {
+    return nil, fmt.Errorf("segment client init: %w", err)
+}</code></pre>
+    </li>
+    <li>
+        <strong>Forwarder wiring</strong>:
+        The <code>segmentClient</code> is passed into <code>NewAppleSubscriptionStartForwarder</code>:
+        <pre><code>appleForwarders := []forwarder.EventForwarder{
+    forwarder.NewAppleSubscriptionStartForwarder(segmentClient),
+}</code></pre>
+    </li>
+    <li>
+        <strong>Error propagation:</strong>
+        <code>newApplication</code> now returns <code>(*application, error)</code>,
+        and callers in <code>main()</code> <code>log.Fatal</code> on error.
+    </li>
+</ul>
+
+<h2>Why This Update?</h2>
+<ul>
+    <li>
+        Production code now uses the real Segment client configured from environment or flags,
+        while tests continue to inject <code>SpyClient</code> via DI.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Implement and unit-test the <code>Track</code> path for subscription starts.</li>
+    <li>Extend handler integration tests to assert on both <code>Identify</code> and <code>Track</code> calls.</li>
+    <li>Smoke-test the running server with Postman or curl to ensure events are enqueued in Segment.</li>
+    <li>Add additional forwarders (e.g. renewals, Google) to the same bootstrap pattern.</li>
+</ul>
+
+</body>
+</html>

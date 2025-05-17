@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/config"
 	"github.com/garyclarke/proxy-service/internal/event/forwarder"
+	"github.com/garyclarke/proxy-service/internal/segment"
 	"github.com/garyclarke/proxy-service/internal/webhook/handler"
 	"log/slog"
 	"net/http"
@@ -21,16 +22,27 @@ type application struct {
 
 // newApplication initializes the application struct.
 func newApplication(cfg config.Config) (*application, error) {
-	// Logger
+	// 1) set up logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	// Initialize the WebhookHandlers and initialize the delegator
-	appleHandler := handler.NewAppleHandler([]forwarder.EventForwarder{&forwarder.AppleSubscriptionStartForwarder{}})
+	// 2) wire up the real Segment client
+	segmentClient, err := segment.NewClient(cfg.SegmentKey, cfg.SegmentEndpoint)
+	if err != nil {
+		return nil, fmt.Errorf("segment client init: %w", err)
+	}
+
+	// 3) build your forwarders using that client
+	appleForwarders := []forwarder.EventForwarder{
+		forwarder.NewAppleSubscriptionStartForwarder(segmentClient),
+	}
+
+	appleHandler := handler.NewAppleHandler(appleForwarders)
+	delegator := handler.NewHandlerDelegator(appleHandler)
 
 	return &application{
 		config:           cfg,
 		logger:           logger,
-		handlerDelegator: handler.NewHandlerDelegator(appleHandler),
+		handlerDelegator: delegator,
 	}, nil
 }
 
