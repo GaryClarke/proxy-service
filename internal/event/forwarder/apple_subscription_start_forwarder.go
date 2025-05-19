@@ -8,10 +8,6 @@ import (
 	"github.com/garyclarke/proxy-service/internal/testutil"
 )
 
-// CategoryStart is the constant representing the start category.
-// In a real application, this might be defined in a lookup or constants file.
-const CategoryStart = "CATEGORY_START"
-
 // AppleSubscriptionStartForwarder is a minimal implementation of the EventForwarder interface
 // for subscription start events.
 type AppleSubscriptionStartForwarder struct {
@@ -26,7 +22,7 @@ func NewAppleSubscriptionStartForwarder(client segment.Client) *AppleSubscriptio
 
 // Supports returns true if the event category matches the subscription start category.
 func (f *AppleSubscriptionStartForwarder) Supports(e *event.SubscriptionEvent) bool {
-	return e.Category == CategoryStart
+	return e.Category == event.CategoryStart
 }
 
 // Forward is a stub implementation that simply returns nil.

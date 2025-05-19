@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 53-create-sub-track-forwarder</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 53-create-sub-track-forwarder</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we scaffolded a new <code>AppleSubscriptionTrackForwarder</code> to handle
+    sending Track calls to Segment for Apple subscription events. For now <code>Forward</code> is
+    a stub that dumps the event with <code>spew.Dump</code>; in the next branch we’ll wire up
+    real mapping and the <code>client.Track</code> call.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New forwarder file:</strong><br>
+        <code>internal/event/forwarder/apple_subscription_track_forwarder.go</code>
+        <pre><code>package forwarder
+
+import (
+    "github.com/davecgh/go-spew/spew"
+    "github.com/garyclarke/proxy-service/internal/event"
+    "github.com/garyclarke/proxy-service/internal/segment"
+)
+
+// AppleSubscriptionTrackForwarder emits a Track call for subscription events.
+type AppleSubscriptionTrackForwarder struct {
+    client segment.Client
+}
+
+// NewAppleSubscriptionTrackForwarder creates a new track forwarder.
+func NewAppleSubscriptionTrackForwarder(client segment.Client) *AppleSubscriptionTrackForwarder {
+    return &AppleSubscriptionTrackForwarder{client: client}
+}
+
+func (f *AppleSubscriptionTrackForwarder) Supports(e *event.SubscriptionEvent) bool {
+    switch e.Category {
+    case event.CategoryStart, event.CategoryStop, event.CategoryRenew, event.CategoryChange:
+        return true
+    default:
+        return false
+    }
+}
+
+// Forward is currently a stub that dumps the event.
+// Later it will map e → analytics.Track and call f.client.Track(...)
+func (f *AppleSubscriptionTrackForwarder) Forward(e *event.SubscriptionEvent) error {
+    spew.Dump("Track called for event:", e.Category, "payload:", e.Subscription)
+    return nil
+}
+</code></pre>
+    </li>
+    <li>
+        <strong>Constructor added:</strong>
+        <pre><code>func NewAppleSubscriptionTrackForwarder(client segment.Client) *AppleSubscriptionTrackForwarder</code></pre>
+    </li>
+    <li>
+        <strong><code>Supports</code> filtering:</strong>
+        Only returns <code>true</code> for the categories:
+        <code>CategoryStart</code>, <code>CategoryRenew</code>, <code>CategoryStop</code>, and <code>CategoryChange</code>.
+    </li>
+    <li>
+        <strong>Stubbed <code>Forward</code> method:</strong>
+        Uses <code>spew.Dump</code> to verify invocation before real implementation.
+    </li>
+</ul>
+
+<h2>Why This Update?</h2>
+<ul>
+    <li>
+        Separates Track logic from Identify logic into its own single‐responsibility forwarder.
+    </li>
+    <li>
+        Establishes the pattern for handling all subscription categories in one place.
+    </li>
+    <li>
+        Provides a clear stub for early verification before wiring the real Segment API call.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>
+        Inject this new track forwarder alongside the start forwarder in both the test helper
+        (<code>newTestApplication</code>) and <code>newApplication</code> bootstrap.
+    </li>
+    <li>
+        Implement mapping of <code>SubscriptionEvent</code> → <code>analytics.Track</code> payload,
+        call <code>client.Track</code>, and handle errors.
+    </li>
+    <li>
+        Write unit tests for <code>AppleSubscriptionTrackForwarder.Forward</code> using <code>SpyClient</code>.
+    </li>
+    <li>
+        Extend the handler integration tests to assert on <code>spy.Tracks</code> in addition to <code>spy.Identifies</code>.
+    </li>
+</ul>
+
+</body>
+</html>
