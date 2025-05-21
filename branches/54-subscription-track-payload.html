@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 54-subscription-track-payload</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 54-subscription-track-payload</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we laid the groundwork for Track events by creating the placeholder
+    <code>SubscriptionTrackPayload</code> type and stubbing out the mapping function
+    <code>mapToSubscriptionTrackPayload</code> in <code>AppleSubscriptionTrackForwarder</code>.
+    No runtime behavior has changed yet – this is purely structure and signatures.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Forwarder stub updated</strong>
+        In <code>apple_subscription_track_forwarder.go</code> the <code>Forward</code> method
+        now contains three TODO comments marking:
+        <pre><code>// 1) Map: e → analytics.Track payload
+// 2) Validate: ensure required fields are set
+// 3) Send: f.client.Track(...)</code></pre>
+    </li>
+    <li>
+        <strong>Mapping function skeleton</strong>
+        Added:
+        <pre><code>func mapToSubscriptionTrackPayload(e *event.SubscriptionEvent) track.SubscriptionTrackPayload {
+    return track.SubscriptionTrackPayload{}
+}</code></pre>
+    </li>
+    <li>
+        <strong>Payload type created</strong>
+        In <code>internal/segment/track/subscription/subscription_track_payload.go</code>:
+        <ul>
+            <li>Defined <code>SubscriptionTrackPayload</code> with all necessary fields (event, userId, brandCode, dates, etc.).</li>
+            <li>Stubbed <code>ToTrack()</code> and <code>Validate()</code> methods with <code>panic("implement me")</code>.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Why This Update?</h2>
+<ul>
+    <li>
+        Establishes the clear separation between event parsing, payload mapping, and SDK invocation.
+    </li>
+    <li>
+        Mirrors the Identify payload pattern, making future implementation and testing more straightforward.
+    </li>
+    <li>
+        Provides explicit placeholders for each step of the Track workflow.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Implement <code>mapToSubscriptionTrackPayload</code> to populate the payload struct from <code>SubscriptionEvent</code>.</li>
+    <li>Write unit tests for the mapper, asserting each field is set correctly.</li>
+    <li>Implement <code>ToTrack()</code> and <code>Validate()</code> on <code>SubscriptionTrackPayload</code>.</li>
+    <li>Integrate the real mapping and <code>client.Track</code> call into <code>Forward</code> in the next branch.</li>
+</ul>
+
+</body>
+</html>
