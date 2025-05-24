@@ -49,14 +49,15 @@ func (f *AppleSubscriptionStartForwarder) Forward(e *event.SubscriptionEvent) er
 // mapToSubscriptionStartPayload translates our internal SubscriptionEvent
 // into the identify.SubscriptionStartPayload that Segment expects.
 func mapToSubscriptionStartPayload(e *event.SubscriptionEvent) identify.SubscriptionStartPayload {
+	sub := e.Subscription
 	return identify.SubscriptionStartPayload{
-		UserID:           *e.Subscription.Properties.IdentityID,
-		BrandCode:        e.Subscription.Brand,
-		AccountGuid:      *e.Subscription.Properties.IdentityID,
+		UserID:           *sub.Properties.IdentityID,
+		BrandCode:        sub.Brand,
+		AccountGuid:      *sub.Properties.IdentityID,
 		Subscribed:       true,
-		SubscriptionID:   e.Subscription.JwsTransaction.OriginalTransactionID,
-		AirshipChannelID: e.Subscription.AirshipChannelID,
-		AirshipID:        e.Subscription.AirshipClaim,
-		AutoRenewEnabled: testutil.PtrBoolFromInt(e.Subscription.JwsRenewalInfo.AutoRenewStatus),
+		SubscriptionID:   sub.JwsTransaction.OriginalTransactionID,
+		AirshipChannelID: sub.AirshipChannelID,
+		AirshipID:        sub.AirshipClaim,
+		AutoRenewEnabled: testutil.PtrBoolFromInt(sub.JwsRenewalInfo.AutoRenewStatus),
 	}
 }

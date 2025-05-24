@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 55-map-subscription-track-payload</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 55-map-subscription-track-payload</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we implemented the full mapping of <code>SubscriptionEvent</code> to the
+    new <code>SubscriptionTrackPayload</code> struct and introduced reusable helper packages
+    for pointer conversions and date parsing.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Completed <code>mapToSubscriptionTrackPayload</code></strong><br>
+        Translates all relevant fields from <code>e.Subscription</code> into the payload:
+        <pre><code>func mapToSubscriptionTrackPayload(e *event.SubscriptionEvent) track.SubscriptionTrackPayload {
+    sub := e.Subscription
+    return track.SubscriptionTrackPayload{
+        Event:            e.Name,
+        UserID:           *sub.Properties.IdentityID,
+        BrandCode:        sub.Brand,
+        AccountGuid:      *sub.Properties.IdentityID,
+        SubscriptionID:   sub.JwsTransaction.OriginalTransactionID,
+        AirshipChannelID: sub.AirshipChannelID,
+        AirshipID:        sub.AirshipClaim,
+        AutoRenewEnabled: ptr.BoolFromIntPtr(sub.JwsRenewalInfo.AutoRenewStatus),
+        Currency:         sub.Properties.Currency,
+        Frequency:        ptr.Str(sub.Properties.TimePeriod),
+        InTrial:          ptr.Bool(sub.Properties.PromotionalOfferApplied),
+        ProductName:      ptr.Str(sub.Properties.ProductName),
+        WithOffer:        ptr.Bool(sub.Properties.PromotionalOfferApplied),
+        RenewalDate:      timeutil.ParseSubscriptionDate(sub.Properties.EndDate),
+        StartDate:        timeutil.ParseSubscriptionDate(sub.Properties.StartDate),
+        NotificationType: e.NotificationType,
+        SubType:          e.SubType,
+        Category:         e.Category,
+    }
+}</code></pre>
+    </li>
+    <li>
+        <strong>Refactored start payload mapping</strong><br>
+        Introduced a local <code>sub</code> variable for consistency:
+        <pre><code>func mapToSubscriptionStartPayload(e *event.SubscriptionEvent) identify.SubscriptionStartPayload {
+    sub := e.Subscription
+    return identify.SubscriptionStartPayload{
+        UserID:           *sub.Properties.IdentityID,
+        BrandCode:        sub.Brand,
+        AccountGuid:      *sub.Properties.IdentityID,
+        Subscribed:       true,
+        SubscriptionID:   sub.JwsTransaction.OriginalTransactionID,
+        AirshipChannelID: sub.AirshipChannelID,
+        AirshipID:        sub.AirshipClaim,
+        AutoRenewEnabled: testutil.PtrBoolFromInt(sub.JwsRenewalInfo.AutoRenewStatus),
+    }
+}</code></pre>
+    </li>
+    <li>
+        <strong>Created <code>internal/ptr</code> package</strong><br>
+        Generic pointer‐helper functions:
+        <pre><code>package ptr
+
+func Str(s string) *string { return &s }
+func Bool(b bool) *bool   { return &b }
+func Int(i int) *int      { return &i }
+
+func BoolFromIntPtr(ip *int) *bool {
+    if ip == nil {
+        return nil
+    }
+    switch *ip {
+    case 0:
+        b := false
+        return &b
+    case 1:
+        b := true
+        return &b
+    default:
+        return nil
+    }
+}</code></pre>
+    </li>
+    <li>
+        <strong>Created <code>internal/timeutil</code> package</strong><br>
+        Shared date parser for <code>yyMMddHHmm</code> → RFC3339:
+        <pre><code>package timeutil
+
+import "time"
+
+// ParseSubscriptionDate parses "yyMMddHHmm" (e.g. "2106170000")
+// and returns an RFC3339 pointer or nil on error.
+func ParseSubscriptionDate(v string) *string {
+    t, err := time.Parse("0601021504", v)
+    if err != nil {
+        return nil
+    }
+    s := t.Format(time.RFC3339)
+    return &s
+}</code></pre>
+    </li>
+</ul>
+
+<h2>Why This Update</h2>
+<ul>
+    <li>
+        Fully populates the Track payload, matching the PHP mapper’s fields in Go.
+    </li>
+    <li>
+        Extracts reusable logic into <code>internal/ptr</code> and <code>internal/timeutil</code>,
+        removing production dependencies on test utilities.
+    </li>
+    <li>
+        Sets the stage for implementing <code>Validate()</code>, <code>ToTrack()</code>,
+        and the actual <code>client.Track</code> call in the next branch.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Replace all uses of <code>testutil.Ptr…</code> in production mapping code with the new <code>internal/ptr</code> helpers.</li>
+    <li>Remove the now-unused pointer functions from <code>internal/testutil</code>.</li>
+    <li>Write unit tests for <code>mapToSubscriptionTrackPayload</code> in <code>apple_subscription_track_forwarder_test.go</code>:
+        <ul>
+            <li>Table-driven cases covering each category (Start, Renew, Stop, Change).</li>
+            <li>Assert all fields (including dates via <code>timeutil.ParseSubscriptionDate</code>) on the returned <code>SubscriptionTrackPayload</code>.</li>
+        </ul>
+    </li>
+</ul>
+
+
+</body>
+</html>

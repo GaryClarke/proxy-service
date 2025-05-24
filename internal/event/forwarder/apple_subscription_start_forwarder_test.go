@@ -60,7 +60,7 @@ func TestAppleSubscriptionStartForwarder_Forward(t *testing.T) {
 
 	// Build a minimal SubscriptionEvent
 	evt := &event.SubscriptionEvent{
-		Category: CategoryStart,
+		Category: event.CategoryStart,
 		Subscription: &subnotes.Subscription{
 			Properties: subnotes.SubscriptionProperties{
 				IdentityID: testutil.PtrStr("user-123"),
