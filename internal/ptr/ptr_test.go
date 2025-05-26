@@ -1,4 +1,4 @@
-package testutil
+package ptr
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPtrBoolFromInt(t *testing.T) {
+func TestBoolFromIntPtr(t *testing.T) {
 	zero := 0
 	one := 1
 	two := 2
@@ -24,12 +24,12 @@ func TestPtrBoolFromInt(t *testing.T) {
 		{
 			name: "0 input yields pointer to false",
 			in:   &zero,
-			want: PtrBool(false),
+			want: Bool(false),
 		},
 		{
 			name: "1 input yields pointer to true",
 			in:   &one,
-			want: PtrBool(true),
+			want: Bool(true),
 		},
 		{
 			name: "other value yields nil",
@@ -40,7 +40,7 @@ func TestPtrBoolFromInt(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := PtrBoolFromInt(tc.in)
+			got := BoolFromIntPtr(tc.in)
 			if tc.want == nil {
 				assert.Nil(t, got)
 			} else {
@@ -50,4 +50,25 @@ func TestPtrBoolFromInt(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStr(t *testing.T) {
+	s := "hello"
+	got := Str(s)
+	assert.NotNil(t, got)
+	assert.Equal(t, s, *got)
+}
+
+func TestBool(t *testing.T) {
+	b := true
+	got := Bool(b)
+	assert.NotNil(t, got)
+	assert.Equal(t, b, *got)
+}
+
+func TestInt(t *testing.T) {
+	i := 42
+	got := Int(i)
+	assert.NotNil(t, got)
+	assert.Equal(t, i, *got)
 }

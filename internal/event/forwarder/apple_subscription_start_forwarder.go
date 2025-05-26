@@ -3,9 +3,9 @@ package forwarder
 import (
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/event"
+	"github.com/garyclarke/proxy-service/internal/ptr"
 	"github.com/garyclarke/proxy-service/internal/segment"
 	identify "github.com/garyclarke/proxy-service/internal/segment/identify/subscription"
-	"github.com/garyclarke/proxy-service/internal/testutil"
 )
 
 // AppleSubscriptionStartForwarder is a minimal implementation of the EventForwarder interface
@@ -58,6 +58,6 @@ func mapToSubscriptionStartPayload(e *event.SubscriptionEvent) identify.Subscrip
 		SubscriptionID:   sub.JwsTransaction.OriginalTransactionID,
 		AirshipChannelID: sub.AirshipChannelID,
 		AirshipID:        sub.AirshipClaim,
-		AutoRenewEnabled: testutil.PtrBoolFromInt(sub.JwsRenewalInfo.AutoRenewStatus),
+		AutoRenewEnabled: ptr.BoolFromIntPtr(sub.JwsRenewalInfo.AutoRenewStatus),
 	}
 }

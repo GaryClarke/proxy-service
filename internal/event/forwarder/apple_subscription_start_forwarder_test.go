@@ -2,8 +2,8 @@ package forwarder
 
 import (
 	"github.com/garyclarke/proxy-service/internal/brand"
+	"github.com/garyclarke/proxy-service/internal/ptr"
 	"github.com/garyclarke/proxy-service/internal/segment"
-	"github.com/garyclarke/proxy-service/internal/testutil"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -63,15 +63,15 @@ func TestAppleSubscriptionStartForwarder_Forward(t *testing.T) {
 		Category: event.CategoryStart,
 		Subscription: &subnotes.Subscription{
 			Properties: subnotes.SubscriptionProperties{
-				IdentityID: testutil.PtrStr("user-123"),
+				IdentityID: ptr.Str("user-123"),
 			},
 			JwsTransaction: &subnotes.JwsTransaction{
 				OriginalTransactionID: "sub-abc",
 			},
-			AirshipChannelID: testutil.PtrStr("chan-1"),
-			AirshipClaim:     testutil.PtrStr("aid-1"),
+			AirshipChannelID: ptr.Str("chan-1"),
+			AirshipClaim:     ptr.Str("aid-1"),
 			JwsRenewalInfo: &subnotes.JwsRenewalInfo{
-				AutoRenewStatus: testutil.PtrInt(1),
+				AutoRenewStatus: ptr.Int(1),
 			},
 			Brand: brand.GF,
 		},
@@ -106,8 +106,8 @@ func Test_mapToSubscriptionStartPayload(t *testing.T) {
 		autoRenewRaw         *int  // input JwsRenewalInfo.AutoRenewStatus
 		wantAutoRenewEnabled *bool // expected pointer bool in payload
 	}{
-		{"autoRenew=1", testutil.PtrInt(1), testutil.PtrBool(true)},
-		{"autoRenew=0", testutil.PtrInt(0), testutil.PtrBool(false)},
+		{"autoRenew=1", ptr.Int(1), ptr.Bool(true)},
+		{"autoRenew=0", ptr.Int(0), ptr.Bool(false)},
 		{"autoRenew=nil", nil, nil},
 	}
 
@@ -116,13 +116,13 @@ func Test_mapToSubscriptionStartPayload(t *testing.T) {
 			// build a minimal Subscription for the test
 			sub := &subnotes.Subscription{
 				Properties: subnotes.SubscriptionProperties{
-					IdentityID: testutil.PtrStr(identityID),
+					IdentityID: ptr.Str(identityID),
 				},
 				JwsTransaction: &subnotes.JwsTransaction{
 					OriginalTransactionID: origTransID,
 				},
-				AirshipChannelID: testutil.PtrStr(airshipChanID),
-				AirshipClaim:     testutil.PtrStr(airshipID),
+				AirshipChannelID: ptr.Str(airshipChanID),
+				AirshipClaim:     ptr.Str(airshipID),
 				JwsRenewalInfo: &subnotes.JwsRenewalInfo{
 					AutoRenewStatus: tc.autoRenewRaw,
 				},

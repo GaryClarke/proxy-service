@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 56-extract-pointer-helpers</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 56-extract-pointer-helpers</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch centralizes all generic pointer‐helper functions into a new
+    <code>internal/ptr</code> package and updates existing tests to use these
+    helpers. The old pointer functions in <code>internal/testutil</code> have been
+    removed, leaving <code>testutil</code> for other test utilities only.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New <code>internal/ptr</code> package</strong><br>
+        Defined pointer constructors and converters in <code>internal/ptr/ptr.go</code>:
+        <pre><code>package ptr
+
+func Str(s string) *string  { return &s }
+func Bool(b bool) *bool     { return &b }
+func Int(i int) *int        { return &i }
+func BoolFromIntPtr(ip *int) *bool { /* maps 0→false, 1→true, else nil */ }</code></pre>
+    </li>
+    <li>
+        <strong>Moved pointer tests</strong><br>
+        Renamed and relocated <code>pointer_test.go</code> to
+        <code>internal/ptr/ptr_test.go</code>, updating it to test
+        <code>Str</code>, <code>Bool</code>, <code>Int</code>, and
+        <code>BoolFromIntPtr</code>.
+    </li>
+    <li>
+        <strong>Updated existing tests</strong><br>
+        Replaced all references to
+        <code>testutil.PtrStr</code>, <code>testutil.PtrBool</code>, etc.
+        with <code>ptr.Str</code>, <code>ptr.Bool</code>, <code>ptr.Int</code>,
+        and <code>ptr.BoolFromIntPtr</code> in:
+        <ul>
+            <li><code>apple_subscription_start_forwarder_test.go</code></li>
+            <li><code>subscription_start_payload_test.go</code></li>
+            <li><code>apple_test.go</code></li>
+        </ul>
+    </li>
+    <li>
+        <strong>Cleaned up <code>testutil</code></strong><br>
+        Removed the old pointer helpers from <code>internal/testutil</code>,
+        keeping only other test utilities.
+    </li>
+</ul>
+
+<h2>Why This Change</h2>
+<ul>
+    <li>Eliminates duplicate helper code and ensures a single source of truth.</li>
+    <li>Makes pointer helpers available to both production code and tests.</li>
+    <li>Keeps <code>testutil</code> focused on test-specific utilities.</li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Ensure production mapping code (identify & track) uses the new <code>ptr</code> helpers.</li>
+    <li>Write and run unit tests for <code>mapToSubscriptionTrackPayload</code>.</li>
+</ul>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/garyclarke/proxy-service/internal/ptr"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,7 +66,7 @@ func TestCreateAppleEvent_Success(t *testing.T) {
 	sub := &subnotes.Subscription{
 		ServerData: &subnotes.ServerData{
 			NotificationType: defaultNotif,
-			SubType:          testutil.PtrStr(initialBuy),
+			SubType:          ptr.Str(initialBuy),
 		},
 		Properties: subnotes.SubscriptionProperties{
 			PromotionalOfferApplied: true,
@@ -90,7 +91,7 @@ func TestCreateAppleEvent_NoMatch(t *testing.T) {
 	sub := &subnotes.Subscription{
 		ServerData: &subnotes.ServerData{
 			NotificationType: "nonexistent",
-			SubType:          testutil.PtrStr("initial_buy"),
+			SubType:          ptr.Str("initial_buy"),
 		},
 		Properties: subnotes.SubscriptionProperties{
 			PromotionalOfferApplied: true,
@@ -113,7 +114,7 @@ func TestResolveAppleSubscriptionEvent(t *testing.T) {
 	defaultSub := &subnotes.Subscription{
 		ServerData: &subnotes.ServerData{
 			NotificationType: defaultNotif,
-			SubType:          testutil.PtrStr(initialBuy),
+			SubType:          ptr.Str(initialBuy),
 		},
 		Properties: subnotes.SubscriptionProperties{
 			PromotionalOfferApplied: true,
@@ -125,34 +126,34 @@ func TestResolveAppleSubscriptionEvent(t *testing.T) {
 		// Exact match candidate: "SUBSCRIBED|INITIAL_BUY|true"
 		"SUBSCRIBED|INITIAL_BUY|true": {
 			Name:             "subscription_started",
-			SubStatus:        testutil.PtrStr("First time subscriber"),
+			SubStatus:        ptr.Str("First time subscriber"),
 			Category:         "CATEGORY_START",
 			NotificationType: "SUBSCRIBED",
-			SubType:          testutil.PtrStr("INITIAL_BUY"),
-			InTrial:          testutil.PtrBool(true),
+			SubType:          ptr.Str("INITIAL_BUY"),
+			InTrial:          ptr.Bool(true),
 		},
 		// Fallback candidate: sub_type generic, key "SUBSCRIBED|null|true"
 		"SUBSCRIBED|null|true": {
 			Name:             "subscription_started_generic_subtype",
-			SubStatus:        testutil.PtrStr("Subscriber"),
+			SubStatus:        ptr.Str("Subscriber"),
 			Category:         "CATEGORY_START",
 			NotificationType: "SUBSCRIBED",
 			SubType:          nil,
-			InTrial:          testutil.PtrBool(true),
+			InTrial:          ptr.Bool(true),
 		},
 		// Fallback candidate: in_trial generic, key "SUBSCRIBED|INITIAL_BUY|null"
 		"SUBSCRIBED|INITIAL_BUY|null": {
 			Name:             "subscription_started_generic_in_trial",
-			SubStatus:        testutil.PtrStr("First time subscriber"),
+			SubStatus:        ptr.Str("First time subscriber"),
 			Category:         "CATEGORY_START",
 			NotificationType: "SUBSCRIBED",
-			SubType:          testutil.PtrStr("INITIAL_BUY"),
+			SubType:          ptr.Str("INITIAL_BUY"),
 			InTrial:          nil,
 		},
 		// Most generic fallback: key "SUBSCRIBED|null|null"
 		"SUBSCRIBED|null|null": {
 			Name:             "subscription_started_generic_both",
-			SubStatus:        testutil.PtrStr("Subscriber"),
+			SubStatus:        ptr.Str("Subscriber"),
 			Category:         "CATEGORY_START",
 			NotificationType: "SUBSCRIBED",
 			SubType:          nil,

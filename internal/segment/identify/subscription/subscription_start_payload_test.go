@@ -2,13 +2,13 @@ package subscription_test
 
 import (
 	"github.com/garyclarke/proxy-service/internal/brand"
+	"github.com/garyclarke/proxy-service/internal/ptr"
 	"testing"
 
 	"github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/assert"
 
 	identify "github.com/garyclarke/proxy-service/internal/segment/identify/subscription"
-	"github.com/garyclarke/proxy-service/internal/testutil"
 )
 
 func TestSubscriptionStartPayload_ToIdentify(t *testing.T) {
@@ -26,9 +26,9 @@ func TestSubscriptionStartPayload_ToIdentify(t *testing.T) {
 				AccountGuid:      "acct-abc",
 				Subscribed:       true,
 				SubscriptionID:   "sub-xyz",
-				AirshipChannelID: testutil.PtrStr("chan-1"),
-				AirshipID:        testutil.PtrStr("aid-1"),
-				AutoRenewEnabled: testutil.PtrBool(false),
+				AirshipChannelID: ptr.Str("chan-1"),
+				AirshipID:        ptr.Str("aid-1"),
+				AutoRenewEnabled: ptr.Bool(false),
 			},
 			wantBrandCode: "gf",
 			wantTraits: analytics.Traits{
