@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 57-test-map-subscription-track-payload</title>
+    <style>
+        body { font-family: Arial, "Helvetica Neue", sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 57-test-map-subscription-track-payload</h1>
+
+<h2>Overview</h2>
+<p>
+    In this branch we added a unit test for the <code>mapToSubscriptionTrackPayload</code> function
+    in the Apple track forwarder, verifying that every field from <code>SubscriptionEvent</code>
+    is correctly mapped into <code>SubscriptionTrackPayload</code>.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>New test file:</strong> <code>internal/event/forwarder/apple_subscription_track_forwarder_test.go</code>
+    </li>
+    <li>
+        <strong>Test_mapToSubscriptionTrackPayload:</strong><br>
+        - Constructs a fully populated <code>SubscriptionEvent</code> (all scalar and pointer fields).<br>
+        - Calls <code>mapToSubscriptionTrackPayload(evt)</code>.<br>
+        - Asserts on:
+        <ul>
+            <li>Scalars: <code>Event</code>, <code>UserID</code>, <code>BrandCode</code>, <code>SubscriptionID</code>, <code>Currency</code>, <code>NotificationType</code>, <code>Category</code>.</li>
+            <li>Pointers: <code>AccountGuid</code>, <code>AirshipChannelID</code>, <code>AirshipID</code>, <code>InTrial</code>, <code>AutoRenewEnabled</code>, <code>Frequency</code>, <code>ProductName</code>, <code>WithOffer</code>, <code>SubType</code>.</li>
+            <li>Date fields via <code>timeutil.ParseSubscriptionDate</code>: <code>StartDate</code>, <code>RenewalDate</code>.</li>
+        </ul>
+        <pre><code>got := mapToSubscriptionTrackPayload(evt)
+assert.Equal(t, "subscription_started", got.Event)
+assert.Equal(t, "user-123", got.UserID)
+assert.Equal(t, brand.GF, got.BrandCode)
+assert.Equal(t, ptr.Str("USD"), got.Currency)
+assert.Equal(t, ptr.Str("user-123"), got.AccountGuid)
+assert.Equal(t, ptr.Bool(true), got.InTrial)
+...
+assert.Equal(t, timeutil.ParseSubscriptionDate("2103170000"), got.StartDate)
+assert.Equal(t, timeutil.ParseSubscriptionDate("2106170000"), got.RenewalDate)</code></pre>
+    </li>
+</ul>
+
+<h2>Why This Matters</h2>
+<ul>
+    <li>
+        Ensures that the track‐payload mapping logic is correct and complete before
+        wiring up <code>ToTrack()</code> and the actual <code>client.Track()</code> call.
+    </li>
+    <li>
+        Catches any missing or mis‐typed fields early, improving confidence in event data.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Implement <code>SubscriptionTrackPayload.Validate()</code> to enforce required fields.</li>
+    <li>Implement <code>SubscriptionTrackPayload.ToTrack()</code> to build the <code>analytics.Track</code> message.</li>
+    <li>Update <code>AppleSubscriptionTrackForwarder.Forward</code> to call <code>Validate</code>, <code>ToTrack</code>, then <code>client.Track</code>.</li>
+    <li>Add integration tests asserting on <code>spy.Tracks</code> in the handler‐level tests.</li>
+</ul>
+
+</body>
+</html>
