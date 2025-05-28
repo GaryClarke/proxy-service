@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 58-validate-subscription-track-payload</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 58-validate-subscription-track-payload</h1>
+
+<h2>Overview</h2>
+<p>
+    Added validation logic to <code>SubscriptionTrackPayload</code> to enforce required fields
+    (event, userId, accountGuid, subscriptionId, notificationType, category, brandCode, productName)
+    and created corresponding table‐driven tests in the external test package.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li>
+        <strong>Implement <code>Validate()</code>:</strong>
+        <code>subscription_track_payload.go</code> now uses <code>validator.Validator</code> to:
+        <ul>
+            <li>✔ Check non‐blank for <code>Event</code>, <code>UserID</code>, <code>AccountGuid</code>,
+                <code>SubscriptionID</code>, <code>NotificationType</code>, <code>Category</code>.</li>
+            <li>✔ Enforce <code>brandCode</code> is one of <code>brand.AllBrands</code>.</li>
+            <li>✔ Ensure <code>ProductName</code> pointer is non‐nil and non‐blank.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>New tests:</strong>
+        <code>subscription_track_payload_test.go</code> (in <code>subscription_test</code> package) now covers:
+        <ul>
+            <li><code>happy_path</code>: all required fields set → no error</li>
+            <li><code>missing_required</code>: omit all → error mentions each required field</li>
+            <li><code>invalid brandCode</code>: bad brandCode → error mentions <code>brandCode</code></li>
+            <li><code>missing productName</code>: omit only productName → error mentions <code>productName</code></li>
+        </ul>
+    </li>
+    <li>
+        <strong>External test package:</strong>
+        Tests live in <code>subscription_test</code> to verify only the public API.
+    </li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Wire <code>Validate()</code> into <code>AppleSubscriptionTrackForwarder.Forward</code>.</li>
+    <li>Implement <code>ToTrack()</code> and invoke <code>client.Track</code>.</li>
+    <li>Add handler‐level tests asserting on <code>spy.Tracks</code>.</li>
+</ul>
+
+</body>
+</html>

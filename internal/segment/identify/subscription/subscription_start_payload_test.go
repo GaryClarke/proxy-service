@@ -2,7 +2,9 @@ package subscription_test
 
 import (
 	"github.com/garyclarke/proxy-service/internal/brand"
+	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/ptr"
+	track "github.com/garyclarke/proxy-service/internal/segment/track/subscription"
 	"testing"
 
 	"github.com/segmentio/analytics-go"
@@ -73,60 +75,65 @@ func TestSubscriptionStartPayload_ToIdentify(t *testing.T) {
 	}
 }
 
-func TestSubscriptionStartPayload_Validate(t *testing.T) {
+func TestSubscriptionTrackPayload_Validate(t *testing.T) {
 	tests := []struct {
 		name       string
-		payload    identify.SubscriptionStartPayload
+		payload    track.SubscriptionTrackPayload
 		wantErr    bool
 		wantFields []string
 	}{
 		{
 			name: "happy path",
-			payload: identify.SubscriptionStartPayload{
-				UserID:         "user-123",
-				BrandCode:      "gf",
-				AccountGuid:    "acct-abc",
-				Subscribed:     true,
-				SubscriptionID: "sub-xyz",
-				// optional pointers omitted
+			payload: track.SubscriptionTrackPayload{
+				Event:            "ev",
+				UserID:           "u1",
+				BrandCode:        brand.GF,
+				AccountGuid:      "u1",
+				SubscriptionID:   "s1",
+				NotificationType: "nt",
+				Category:         event.CategoryStart,
+				ProductName:      ptr.Str("goodfood+"),
 			},
 			wantErr: false,
 		},
 		{
-			name: "blank UserID",
-			payload: identify.SubscriptionStartPayload{
-				UserID:         "",
-				BrandCode:      brand.GF,
-				AccountGuid:    "acct-abc",
-				Subscribed:     true,
-				SubscriptionID: "sub-xyz",
+			name:    "missing required",
+			payload: track.SubscriptionTrackPayload{},
+			wantErr: true,
+			wantFields: []string{
+				"event", "userId", "accountGuid", "subscriptionId",
+				"notificationType", "category", "brandCode", "productName",
 			},
-			wantErr:    true,
-			wantFields: []string{"userId"},
 		},
 		{
-			name: "invalid BrandCode",
-			payload: identify.SubscriptionStartPayload{
-				UserID:         "user-123",
-				BrandCode:      "invalid-brand",
-				AccountGuid:    "acct-abc",
-				Subscribed:     true,
-				SubscriptionID: "sub-xyz",
+			name: "invalid brandCode",
+			payload: track.SubscriptionTrackPayload{
+				Event:            "ev",
+				UserID:           "u1",
+				BrandCode:        "not-a-brand", // invalid
+				AccountGuid:      "u1",
+				SubscriptionID:   "s1",
+				NotificationType: "nt",
+				Category:         event.CategoryStart,
+				ProductName:      ptr.Str("goodfood+"),
 			},
 			wantErr:    true,
 			wantFields: []string{"brandCode"},
 		},
 		{
-			name: "blank AccountGuid and SubscriptionID",
-			payload: identify.SubscriptionStartPayload{
-				UserID:         "user-123",
-				BrandCode:      brand.GF,
-				AccountGuid:    "",
-				Subscribed:     true,
-				SubscriptionID: "",
+			name: "missing productName only",
+			payload: track.SubscriptionTrackPayload{
+				Event:            "ev",
+				UserID:           "u1",
+				BrandCode:        brand.GF,
+				AccountGuid:      "u1",
+				SubscriptionID:   "s1",
+				NotificationType: "nt",
+				Category:         event.CategoryStart,
+				// ProductName omitted
 			},
 			wantErr:    true,
-			wantFields: []string{"accountGuid", "subscriptionId"},
+			wantFields: []string{"productName"},
 		},
 	}
 
@@ -134,12 +141,12 @@ func TestSubscriptionStartPayload_Validate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.payload.Validate()
 			if tt.wantErr {
-				assert.Error(t, err, "expected validation to fail")
-				for _, field := range tt.wantFields {
-					assert.Contains(t, err.Error(), field, "error should mention field %q", field)
+				assert.Error(t, err)
+				for _, f := range tt.wantFields {
+					assert.Contains(t, err.Error(), f)
 				}
 			} else {
-				assert.NoError(t, err, "expected validation to pass")
+				assert.NoError(t, err)
 			}
 		})
 	}
