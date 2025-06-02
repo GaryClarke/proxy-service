@@ -131,13 +131,13 @@ func expectedIdentifySubStartModel(
 	airshipChannelID, airshipID string,
 ) analytics.Identify {
 	// replicate the logic in ToIdentify()
-	t := &segment.Traits{Traits: make(analytics.Traits)}
-	t.SetIfNotEmpty(fmt.Sprintf("acc_%s_guid", brandCode), accountGuid)
-	t.SetIfNotEmpty(fmt.Sprintf("app_%s_sub", brandCode), subscribed)
-	t.SetIfNotEmpty(fmt.Sprintf("app_%s_sub_id", brandCode), subscriptionID)
-	t.SetIfNotEmpty(fmt.Sprintf("app_%s_auto_renew_status", brandCode), autoRenew)
-	t.SetIfNotEmpty(fmt.Sprintf("%s_airship_channel_id", brandCode), airshipChannelID)
-	t.SetIfNotEmpty(fmt.Sprintf("acc_%s_airship_id", brandCode), airshipID)
+	fb := segment.NewFieldBuilder()
+	fb.SetIfNotEmpty(fmt.Sprintf("acc_%s_guid", brandCode), accountGuid)
+	fb.SetIfNotEmpty(fmt.Sprintf("app_%s_sub", brandCode), subscribed)
+	fb.SetIfNotEmpty(fmt.Sprintf("app_%s_sub_id", brandCode), subscriptionID)
+	fb.SetIfNotEmpty(fmt.Sprintf("app_%s_auto_renew_status", brandCode), autoRenew)
+	fb.SetIfNotEmpty(fmt.Sprintf("%s_airship_channel_id", brandCode), airshipChannelID)
+	fb.SetIfNotEmpty(fmt.Sprintf("acc_%s_airship_id", brandCode), airshipID)
 
 	ctx := &analytics.Context{
 		Extra: map[string]interface{}{
@@ -147,7 +147,7 @@ func expectedIdentifySubStartModel(
 
 	return analytics.Identify{
 		UserId:  userID,
-		Traits:  t.Traits,
+		Traits:  fb.Traits(),
 		Context: ctx,
 	}
 }
