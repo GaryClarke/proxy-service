@@ -1,7 +1,7 @@
 package forwarder
 
 import (
-	"github.com/davecgh/go-spew/spew"
+	"fmt"
 	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/ptr"
 	"github.com/garyclarke/proxy-service/internal/segment"
@@ -33,11 +33,16 @@ func (f *AppleSubscriptionTrackForwarder) Supports(e *event.SubscriptionEvent) b
 func (f *AppleSubscriptionTrackForwarder) Forward(e *event.SubscriptionEvent) error {
 	// 1) Map: e → analytics.Track payload
 	payload := mapToSubscriptionTrackPayload(e)
-	spew.Dump(payload)
 
 	// 2) Validate: ensure required fields are set
+	if err := payload.Validate(); err != nil {
+		return fmt.Errorf("invalid subscription track payload: %w", err)
+	}
 
 	// 3) Send: f.client.Track(...)
+	if err := f.client.Track(payload.ToTrack()); err != nil {
+		return fmt.Errorf("segment track failed: %w", err)
+	}
 	return nil
 }
 
