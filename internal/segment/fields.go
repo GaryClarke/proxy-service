@@ -47,3 +47,7 @@ func (b *FieldBuilder) Traits() analytics.Traits {
 func (b *FieldBuilder) Properties() analytics.Properties {
 	return analytics.Properties(b.data)
 }
+
+func (b *FieldBuilder) ToMap() map[string]interface{} {
+	return b.data
+}

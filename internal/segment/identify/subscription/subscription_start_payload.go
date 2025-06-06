@@ -25,13 +25,13 @@ type SubscriptionStartPayload struct {
 }
 
 func (p *SubscriptionStartPayload) ToIdentify() analytics.Identify {
-	fb := segment.NewFieldBuilder()
-	fb.SetIfNotEmpty(fmt.Sprintf("acc_%s_guid", p.BrandCode), p.AccountGuid)
-	fb.SetIfNotEmpty(fmt.Sprintf("app_%s_sub", p.BrandCode), p.Subscribed)
-	fb.SetIfNotEmpty(fmt.Sprintf("app_%s_sub_id", p.BrandCode), p.SubscriptionID)
-	fb.SetIfNotEmpty(fmt.Sprintf("app_%s_auto_renew_status", p.BrandCode), p.AutoRenewEnabled)
-	fb.SetIfNotEmpty(fmt.Sprintf("%s_airship_channel_id", p.BrandCode), p.AirshipChannelID)
-	fb.SetIfNotEmpty(fmt.Sprintf("acc_%s_airship_id", p.BrandCode), p.AirshipID)
+	traits := segment.NewFieldBuilder()
+	traits.SetIfNotEmpty(fmt.Sprintf("acc_%s_guid", p.BrandCode), p.AccountGuid)
+	traits.SetIfNotEmpty(fmt.Sprintf("app_%s_sub", p.BrandCode), p.Subscribed)
+	traits.SetIfNotEmpty(fmt.Sprintf("app_%s_sub_id", p.BrandCode), p.SubscriptionID)
+	traits.SetIfNotEmpty(fmt.Sprintf("app_%s_auto_renew_status", p.BrandCode), p.AutoRenewEnabled)
+	traits.SetIfNotEmpty(fmt.Sprintf("%s_airship_channel_id", p.BrandCode), p.AirshipChannelID)
+	traits.SetIfNotEmpty(fmt.Sprintf("acc_%s_airship_id", p.BrandCode), p.AirshipID)
 
 	c := &analytics.Context{
 		Extra: map[string]interface{}{
@@ -41,7 +41,7 @@ func (p *SubscriptionStartPayload) ToIdentify() analytics.Identify {
 
 	return analytics.Identify{
 		UserId:  p.UserID,
-		Traits:  fb.Traits(),
+		Traits:  traits.Traits(),
 		Context: c,
 	}
 }

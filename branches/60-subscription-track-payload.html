@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 60-subscription-track-payload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2em;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 4px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 90%;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-left: 4px solid #ccc;
+            overflow-x: auto;
+        }
+        ul {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>60-subscription-track-payload</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Implemented the <code>ToTrack()</code> method for <code>SubscriptionTrackPayload</code>,
+    which constructs a Segment-compatible Track payload for subscription events.
+</p>
+
+<h2>✨ Key Features Added</h2>
+<ul>
+    <li>Created a <code>ToTrack()</code> method returning <code>analytics.Track</code>.</li>
+    <li>Used shared <code>FieldBuilder</code> utility to build <code>traits</code> and <code>properties</code> fields.</li>
+    <li>Inserted <code>brand_code</code> and <code>traits</code> into the <code>Context.Extra</code> field.</li>
+    <li>Mapped all expected subscription fields (e.g. <code>sub_id</code>, <code>auto_renew_status</code>, <code>in_trial</code>, etc.).</li>
+</ul>
+
+<h2>🧪 Tests Written</h2>
+<p>
+    <strong>Test:</strong> <code>TestSubscriptionTrackPayload_ToTrack</code>
+</p>
+<ul>
+    <li>✅ Covers both <strong>fully populated</strong> and <strong>minimal</strong> (nil pointer) scenarios.</li>
+    <li>✅ Asserts:
+        <ul>
+            <li><code>UserId</code> and <code>Event</code></li>
+            <li><code>brand_code</code> in context</li>
+            <li><code>traits</code> as <code>map[string]interface{}</code></li>
+            <li><code>properties</code> correctly built</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>c := &analytics.Context{
+    Extra: map[string]interface{}{
+        "brand_code": string(p.BrandCode),
+        "traits":     traits.ToMap(),
+    },
+}
+
+return analytics.Track{
+    Event:      p.Event,
+    UserId:     p.UserID,
+    Properties: props.Properties(),
+    Context:    c,
+}</code></pre>
+
+<h2>✅ Test Execution</h2>
+<p>Command used to run test:</p>
+<pre><code>go test ./... -run TestSubscriptionTrackPayload_ToTrack</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    Branch work is complete, tested, and behaves as expected.
+    No additional edge case tests (e.g. invalid brand codes) were required to maintain consistency
+    with <code>ToIdentify()</code> coverage.
+</p>
+
+</body>
+</html>

@@ -3,6 +3,7 @@ package subscription
 import (
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/brand"
+	"github.com/garyclarke/proxy-service/internal/segment"
 	"github.com/garyclarke/proxy-service/internal/segment/track"
 	"github.com/garyclarke/proxy-service/internal/validator"
 	"github.com/segmentio/analytics-go"
@@ -30,10 +31,52 @@ type SubscriptionTrackPayload struct {
 	NotificationType string
 	SubType          *string
 	Category         string
+	Platform         *string
+	Status           *string
 }
 
+// ToTrack maps this payload into a Segment analytics.Track call.
+// It mirrors the PHP SubscriptionModel::toArray() structure.
 func (p *SubscriptionTrackPayload) ToTrack() analytics.Track {
-	panic("implement me")
+	traits := segment.NewFieldBuilder()
+	props := segment.NewFieldBuilder()
+
+	// ─── Traits ─────────────────────────────────────
+	traits.SetIfNotEmpty(fmt.Sprintf("acc_%s_guid", p.BrandCode), p.AccountGuid)
+	traits.SetIfNotEmpty(fmt.Sprintf("app_%s_sub_id", p.BrandCode), p.SubscriptionID)
+	traits.SetIfNotEmpty(fmt.Sprintf("%s_airship_channel_id", p.BrandCode), p.AirshipChannelID)
+	traits.SetIfNotEmpty(fmt.Sprintf("acc_%s_airship_id", p.BrandCode), p.AirshipID)
+
+	// ─── Properties ────────────────────────────────
+	props.SetIfNotEmpty("airship_channel_id", p.AirshipChannelID)
+	props.SetIfNotEmpty("airship_id", p.AirshipID)
+	props.SetIfNotEmpty("sub_id", p.SubscriptionID)
+	props.SetIfNotEmpty("brand_code", string(p.BrandCode))
+	props.SetIfNotEmpty("sub_auto_renew_status", p.AutoRenewEnabled)
+	props.SetIfNotEmpty("sub_currency", p.Currency)
+	props.SetIfNotEmpty("sub_frequency", p.Frequency)
+	props.SetIfNotEmpty("sub_in_trial", p.InTrial)
+	props.SetIfNotEmpty("sub_product_name", p.ProductName)
+	props.SetIfNotEmpty("sub_renewal_date", p.RenewalDate)
+	props.SetIfNotEmpty("sub_start_date", p.StartDate)
+	props.SetIfNotEmpty("sub_type", p.SubType)
+	props.SetIfNotEmpty("sub_with_offer", p.WithOffer)
+	props.SetIfNotEmpty("platform", p.Platform)
+	props.SetIfNotEmpty("sub_status", p.Status)
+
+	c := &analytics.Context{
+		Extra: map[string]interface{}{
+			"brand_code": string(p.BrandCode),
+			"traits":     traits.ToMap(),
+		},
+	}
+
+	return analytics.Track{
+		Event:      p.Event,
+		UserId:     p.UserID,
+		Properties: props.Properties(),
+		Context:    c,
+	}
 }
 
 func (p *SubscriptionTrackPayload) Validate() error {
