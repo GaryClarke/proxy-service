@@ -124,7 +124,7 @@ func TestSubscriptionTrackPayload_Validate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "missing required",
+			name:    "missing required",
 			payload: track.SubscriptionTrackPayload{
 				// leave everything blank
 			},
