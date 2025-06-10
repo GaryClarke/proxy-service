@@ -34,6 +34,7 @@ func newApplication(cfg config.Config) (*application, error) {
 	// 3) build your forwarders using that client
 	appleForwarders := []forwarder.EventForwarder{
 		forwarder.NewAppleSubscriptionStartForwarder(segmentClient),
+		forwarder.NewAppleSubscriptionTrackForwarder(segmentClient),
 	}
 
 	appleHandler := handler.NewAppleHandler(appleForwarders)

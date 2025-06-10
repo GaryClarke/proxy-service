@@ -37,8 +37,10 @@ func newTestApplication(t *testing.T, debug bool, segmentClient segment.Client) 
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 
-	fwd := forwarder.NewAppleSubscriptionStartForwarder(segmentClient)
-	forwarders := []forwarder.EventForwarder{fwd}
+	forwarders := []forwarder.EventForwarder{
+		forwarder.NewAppleSubscriptionStartForwarder(segmentClient),
+		forwarder.NewAppleSubscriptionTrackForwarder(segmentClient),
+	}
 	appleHandler := handler.NewAppleHandler(forwarders)
 	handlerDelegator := handler.NewHandlerDelegator(appleHandler)
 

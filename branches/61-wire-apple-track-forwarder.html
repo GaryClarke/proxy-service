@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 61-wire-apple-track-forwarder</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>61-wire-apple-track-forwarder</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Wire up the <code>AppleSubscriptionTrackForwarder</code> so that Track events are:
+<ol>
+    <li>Registered in the main application (<code>app.go</code>), and</li>
+    <li>Injected into tests via <code>newTestApplication</code> (using <code>SpyClient</code>).</li>
+</ol>
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <strong>app.go</strong>: Added Track forwarder alongside the Identify forwarder:
+        <pre><code>appleForwarders := []forwarder.EventForwarder{
+    forwarder.NewAppleSubscriptionStartForwarder(segmentClient),
+    forwarder.NewAppleSubscriptionTrackForwarder(segmentClient),
+}</code></pre>
+    </li>
+    <li>
+        <strong>testutils_test.go</strong>: Updated <code>newTestApplication</code> to include Track forwarder:
+        <pre><code>forwarders := []forwarder.EventForwarder{
+    forwarder.NewAppleSubscriptionStartForwarder(segmentClient),
+    forwarder.NewAppleSubscriptionTrackForwarder(segmentClient),
+}</code></pre>
+    </li>
+</ul>
+
+<h2>🧪 Test Verification</h2>
+<p>After wiring, the full suite of existing tests passed, confirming both forwarders are invoked in feature tests:</p>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The <code>AppleSubscriptionTrackForwarder</code> is now fully integrated in both production code and test setups.
+    Ready to extend feature tests to assert Track calls or move on to next enhancements.
+</p>
+
+</body>
+</html>
