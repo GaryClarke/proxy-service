@@ -67,5 +67,7 @@ func mapToSubscriptionTrackPayload(e *event.SubscriptionEvent) track.Subscriptio
 		NotificationType: e.NotificationType,
 		SubType:          e.SubType,
 		Category:         e.Category,
+		Platform:         sub.Properties.Platform,
+		Status:           e.SubStatus,
 	}
 }

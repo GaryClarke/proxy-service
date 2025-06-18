@@ -3,12 +3,27 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/garyclarke/proxy-service/internal/ptr"
 	"github.com/garyclarke/proxy-service/internal/segment"
 	"github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"testing"
+)
+
+const (
+	testUserID           = "909365ca-7d09-457d-8f5e-433885a25573"
+	testBrandCode        = "gf"
+	testSubscriptionID   = "100000123456789"
+	testAirshipChannelID = "test-airship-channel"
+	testAirshipID        = "test-airship-id"
+	testCurrency         = "USD"
+	testFrequency        = "Annual"
+	testProductName      = "exampleSku"
+	testRenewalDate      = "2021-07-17T00:00:00Z"
+	testStartDate        = "2021-06-17T00:00:00Z"
+	testPlatform         = "ios"
 )
 
 func TestHealthcheckHandler(t *testing.T) {
@@ -57,7 +72,7 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 		payload          string
 		expectedStatus   int
 		expectedIdentify analytics.Identify
-		//expectedTrack    interface{} // Replace with your concrete type
+		expectedTrack    analytics.Track
 		// Optionally, expected error message etc.
 	}{
 		{
@@ -72,16 +87,24 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 			),
 			expectedStatus: http.StatusNoContent,
 			expectedIdentify: expectedIdentifySubStartModel(
-				"909365ca-7d09-457d-8f5e-433885a25573", // UserID:Subscription.Properties.IdentityID
-				"gf",                                   // Derived
-				"909365ca-7d09-457d-8f5e-433885a25573", // AccountGuid:Subscription.Properties.IdentityID
-				"100000123456789",                      // SubscriptionID:Subscription.JwsTransaction.OriginalTransactionID
-				true,                                   // Derived
-				true,                                   // AutoRenewEnabled:Subscription.JwsRenewalInfo.AutoRenewStatus
-				"test-airship-channel",                 // AirshipChannelID:Subscription.AirshipChannelID
-				"test-airship-id",                      // AirshipID:Subscription.AirshipClaim
+				testUserID,           // UserID:Subscription.Properties.IdentityID
+				testBrandCode,        // Derived
+				testUserID,           // AccountGuid:Subscription.Properties.IdentityID
+				testSubscriptionID,   // SubscriptionID:Subscription.JwsTransaction.OriginalTransactionID
+				true,                 // Derived
+				true,                 // AutoRenewEnabled:Subscription.JwsRenewalInfo.AutoRenewStatus
+				testAirshipChannelID, // AirshipChannelID:Subscription.AirshipChannelID
+				testAirshipID,        // AirshipID:Subscription.AirshipClaim
 			),
-			// expectedTrack:    expectedTrackModel("SUB_EVENT_STARTED", "Subscriber", false),
+			expectedTrack: expectedTrackModel(
+				// event, subStatus, inTrial, autoRenew, subType, platform
+				"subscription_started",  // lookup event name
+				"First time subscriber", // lookup subStatus
+				false,                   // inTrial
+				true,                    // autoRenew
+				"INITIAL_BUY",           // subType (notification subtype)
+				testPlatform,            // platform (from payload JSON)
+			),
 		},
 	}
 
@@ -106,21 +129,9 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 			assert.Equal(t, tt.expectedIdentify, got)
 
 			// 4) assert Track was called correctly
-
-			// Next, you can assert that your mock segment client (or any other dependency)
-			// was called with the expected identify and track models.
-			//
-			// For instance, if your segment client is a dependency in your application and
-			// you can inspect its state after the request, you could do:
-			//
-			// gotIdentify := app.segmentClient.GetLatestIdentifyModel()
-			// assert.Equal(t, gotIdentify, tt.expectedIdentify)
-			//
-			// gotTrack := app.segmentClient.GetLatestTrackModel()
-			// assert.Equal(t, gotTrack, tt.expectedTrack)
-			//
-			// These functions would be part of your fake/mock segment client that you inject
-			// into your application for testing.
+			assert.Len(t, spy.Tracks, 1)
+			gotTrack := spy.Tracks[0]
+			assert.Equal(t, tt.expectedTrack, gotTrack)
 		})
 	}
 }
@@ -149,6 +160,55 @@ func expectedIdentifySubStartModel(
 		UserId:  userID,
 		Traits:  fb.Traits(),
 		Context: ctx,
+	}
+}
+
+func expectedTrackModel(
+	event string,
+	subStatus string,
+	inTrial bool,
+	autoRenew bool,
+	subType string,
+	platform string,
+) analytics.Track {
+	// Build the traits
+	traits := segment.NewFieldBuilder().
+		SetIfNotEmpty(fmt.Sprintf("acc_%s_guid", testBrandCode), testUserID).
+		SetIfNotEmpty(fmt.Sprintf("app_%s_sub_id", testBrandCode), testSubscriptionID).
+		SetIfNotEmpty(fmt.Sprintf("%s_airship_channel_id", testBrandCode), ptr.Str(testAirshipChannelID)).
+		SetIfNotEmpty(fmt.Sprintf("acc_%s_airship_id", testBrandCode), ptr.Str(testAirshipID))
+
+	// Build the properties
+	props := segment.NewFieldBuilder().
+		SetIfNotEmpty("airship_channel_id", ptr.Str(testAirshipChannelID)).
+		SetIfNotEmpty("airship_id", ptr.Str(testAirshipID)).
+		SetIfNotEmpty("sub_id", testSubscriptionID).
+		SetIfNotEmpty("brand_code", testBrandCode).
+		SetIfNotEmpty("sub_type", ptr.Str(subType)).
+		SetIfNotEmpty("platform", &platform).
+		SetIfNotEmpty("sub_auto_renew_status", &autoRenew).
+		SetIfNotEmpty("sub_currency", ptr.Str(testCurrency)).
+		SetIfNotEmpty("sub_frequency", ptr.Str(testFrequency)).
+		SetIfNotEmpty("sub_in_trial", &inTrial).
+		SetIfNotEmpty("sub_product_name", ptr.Str(testProductName)).
+		SetIfNotEmpty("sub_renewal_date", ptr.Str(testRenewalDate)).
+		SetIfNotEmpty("sub_start_date", ptr.Str(testStartDate)).
+		SetIfNotEmpty("sub_status", &subStatus).
+		SetIfNotEmpty("sub_with_offer", &inTrial)
+
+	// Assemble context
+	ctx := &analytics.Context{
+		Extra: map[string]interface{}{
+			"brand_code": testBrandCode,
+			"traits":     traits.ToMap(),
+		},
+	}
+
+	return analytics.Track{
+		Event:      event,
+		UserId:     testUserID,
+		Properties: props.Properties(),
+		Context:    ctx,
 	}
 }
 

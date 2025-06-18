@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 62-add-track-assertions-to-apple-webhook-tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>62-add-track-assertions-to-apple-webhook-tests</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Enhance the end-to-end Apple webhook handler test to assert that a Track event is emitted,
+    matching the subscription-start payload mapping.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Test Struct in handlers_test.go:
+        Added <code>expectedTrack analytics.Track</code> field.
+    </li>
+    <li>
+        Helper: Defined <code>expectedTrackModel</code> to build the expected <code>analytics.Track</code>,
+        mirroring <code>ToTrack()</code> (including <code>platform</code> and <code>sub_status</code>).
+    </li>
+    <li>
+        Test Case: Populated expectedTrack with inline comments explaining each value’s origin:
+        <pre><code>expectedTrack: expectedTrackModel(
+  "subscription_started",        // lookup event name
+  "First time subscriber",       // lookup sub_status
+  false,                         // inTrial
+  true,                          // autoRenew
+  "INITIAL_BUY",                 // subType
+  testPlatform,                  // platform from payload
+),</code></pre>
+    </li>
+    <li>
+        Assertion: Inside TestWebhookHandler_AppleScenarios, added:
+        <pre><code>assert.Len(t, spy.Tracks, 1)
+gotTrack := spy.Tracks[0]
+assert.Equal(t, tt.expectedTrack, gotTrack)</code></pre>
+    </li>
+</ul>
+
+<h2>🧪 Test Verification</h2>
+<p>All tests—including the enhanced webhook scenario—pass successfully:</p>
+<pre><code>go_test ./...</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The Apple webhook handler test now fully verifies both Identify and Track paths,
+    ensuring subscription-start events are forwarded correctly to Segment.
+</p>
+
+</body>
+</html>
