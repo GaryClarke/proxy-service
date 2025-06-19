@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 1-project-setup</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>1-project-setup</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>Kick off the proxy‐service project with basic scaffolding: configuration, HTTP server, JSON helper, routing, simple assertions, and initial tests.</p>
+
+<h2>🔑 Key Additions</h2>
+<ul>
+    <li><strong>cmd/api/main.go</strong>
+        <ul>
+            <li>Flags for <code>PORT</code> (default 4000) and <code>ENV</code> (default “development”).</li>
+            <li><code>application</code> struct holding <code>config</code> and <code>logger</code>.</li>
+            <li>HTTP server setup with timeouts and structured error logging.</li>
+        </ul>
+    </li>
+    <li><strong>cmd/api/routes.go</strong>
+        <ul>
+            <li>Registered endpoints:
+                <code>GET /healthcheck</code> → health check,
+                <code>POST /webhook</code> → webhook stub returning 204.</li>
+        </ul>
+    </li>
+    <li><strong>cmd/api/app.go helpers</strong>
+        <ul>
+            <li><code>writeJSON</code> helper to marshal responses with headers and status.</li>
+        </ul>
+    </li>
+    <li><strong>cmd/api/handlers_test.go</strong>
+        <ul>
+            <li>Healthcheck test: asserts 200 OK, JSON content-type, and correct body.</li>
+            <li>Webhook test: asserts 204 No Content on POST.</li>
+        </ul>
+    </li>
+    <li><strong>cmd/api/testutils_test.go</strong>
+        <ul>
+            <li><code>newTestServer</code> wrapping <code>httptest.Server</code>.</li>
+            <li><code>newTestApplication</code> for injecting fake dependencies.</li>
+            <li><code>postJSON</code> helper to send JSON payloads in tests.</li>
+        </ul>
+    </li>
+    <li><strong>internal/assert/assert.go</strong>
+        <ul>
+            <li>Generic <code>assert.Equal[T comparable]</code> for simplifying test assertions.</li>fileciteturn1file0
+        </ul>
+    </li>
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
+    data := map[string]string{
+        "status":      "available",
+        "environment": app.config.Env,
+        "version":     version,
+    }
+    app.writeJSON(w, http.StatusOK, data, nil)
+}</code></pre>
+
+<h2>🧪 Test Command</h2>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>Project is scaffolded with basic server, routes, JSON helper, and assertion utility. Initial tests are passing and ready for feature development.</p>
+
+</body>
+</html>
