@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 4-add-handler-delegator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>4-add-handler-delegator</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Establish a pluggable handler interface and a delegator to route incoming webhooks
+    to the appropriate handler implementations.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Created <strong>internal/webhook/handler/handler.go</strong>:
+        <pre><code>package handler
+
+import (
+    "context"
+    "github.com/garyclarke/proxy-service/internal/webhook"
+)
+
+// WebhookHandler defines methods to filter and process webhooks.
+type WebhookHandler interface {
+    supports(wh webhook.Webhook) bool
+    handle(ctx context.Context, wh webhook.Webhook) error
+}
+
+// Delegator routes each incoming webhook to all supporting handlers.
+type Delegator struct {
+    handlers []WebhookHandler
+}
+
+func NewHandlerDelegator(handlers ...WebhookHandler) *Delegator {
+    return &Delegator{handlers: handlers}
+}
+
+func (d *Delegator) Delegate(ctx context.Context, wh webhook.Webhook) error {
+    for _, h := range d.handlers {
+        if h.supports(wh) {
+            if err := h.handle(ctx, wh); err != nil {
+                return err
+            }
+        }
+    }
+    return nil
+}</code></pre>
+        Introduced: <ul> <li><code>WebhookHandler</code> interface with <code>supports</code> and <code>handle</code> methods.</li> <li><code>Delegator</code> that holds a slice of <code>WebhookHandler</code> and invokes each one in turn.</li> </ul> </li>
+
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>// In your server setup:
+appleHandler := NewAppleHandler(…)
+delegator := handler.NewHandlerDelegator(appleHandler)
+
+// In webhookHandler:
+var wh webhook.Webhook
+_ = json.NewDecoder(r.Body).Decode(&wh)
+_ = delegator.Delegate(r.Context(), wh)</code></pre>
+
+<h2>🧪 Test Command</h2>
+<pre><code>go test ./internal/webhook/handler</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    A flexible handler delegation mechanism is now in place, ready to plug in
+    specific platform handlers (e.g. Apple, Google) under a common interface.
+</p>
+
+</body>
+</html>
