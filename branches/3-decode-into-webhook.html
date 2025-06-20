@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 3-decode-webhook-payload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>3-decode-webhook-payload</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Enhance the webhook handler to parse incoming JSON into the new <code>Webhook</code> model,
+    validate the request, and respond appropriately on error or success.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <strong>cmd/api/handlers.go</strong>
+        <ul>
+            <li>Imported <code>encoding/json</code> and <code>internal/webhook</code>.</li>
+            <li>In <code>webhookHandler</code>, decode <code>r.Body</code> into <code>webhook.Webhook</code>:</li>
+            <pre><code>var wh webhook.Webhook
+if err := json.NewDecoder(r.Body).Decode(&wh); err != nil {
+    app.logger.Error("failed to decode request body", "error", err)
+    http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+    return
+}</code></pre>
+            <li>If decoding succeeds, respond <code>204 No Content</code> as before.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/handlers_test.go</strong>
+        <ul>
+            <li>Shortened and escaped the single-line <code>getPayload</code> helper for readability.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/testutils_test.go</strong>
+        <ul>
+            <li>Enabled logging output to <code>os.Stdout</code> in tests for easier debugging.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>go.mod / go.sum</strong>
+        <ul>
+            <li>Added <code>github.com/davecgh/go-spew</code> as an indirect dependency.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>🧪 Test Verification</h2>
+<p>Run tests in <code>cmd/api</code> to confirm error and success paths:</p>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The webhook handler now properly parses and validates JSON payloads, returning
+    <code>422 Unprocessable Entity</code> on bad input and <code>204 No Content</code> on success.
+</p>
+
+</body>
+</html>
