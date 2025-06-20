@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 9-use-readJSON</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>9-use-readJSON</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Refactor the webhook handler to leverage the new <code>readJSON</code> helper, removing
+    manual JSON decoding and ensuring consistent error handling. Tidy up related tests and
+    test utilities.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <strong>cmd/api/handlers.go</strong>
+        <ul>
+            <li>Removed import of <code>encoding/json</code>.</li>
+            <li>Replaced:
+                <pre><code>err := json.NewDecoder(r.Body).Decode(&wh)</code></pre>
+                with:
+                <pre><code>err := app.readJSON(w, r, &wh)</code></pre>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/handlers_test.go</strong>
+        <ul>
+            <li>Adjusted test case name for consistency (“Subscription Start|Initial Buy|Not in trial”).</li>
+            <li>Updated <code>getPayload</code> signature/usage to match existing helper.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/testutils_test.go</strong>
+        <ul>
+            <li>Reverted test logger back to discard mode for quieter output:</li>
+            <pre><code>logger: slog.New(slog.NewTextHandler(io.Discard, nil))</code></pre>
+        </ul>
+    </li>
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>// Before in webhookHandler:
+var wh webhook.Webhook
+err := json.NewDecoder(r.Body).Decode(&wh)
+
+// After:
+var wh webhook.Webhook
+err := app.readJSON(w, r, &wh)</code></pre>
+
+<h2>🧪 Test Verification</h2>
+<p>Run the handlers tests to confirm nothing breaks:</p>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The webhook handler is now fully using the robust <code>readJSON</code> helper for
+    parsing, ensuring consistent size limits and error messages, and tests remain green.
+</p>
+
+</body>
+</html>
