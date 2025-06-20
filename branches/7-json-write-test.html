@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 7-json-write-test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>7-json-write-test</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Add comprehensive unit tests for the <code>writeJSON</code> helper and extend the
+    <code>assert</code> package with additional utility functions.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Created <strong>cmd/api/helpers_test.go</strong>:
+        <ul>
+            <li>Test <code>writeJSON</code> writes correct status, headers, and JSON body.</li>
+            <li>Uses <code>httptest.ResponseRecorder</code> to capture response for assertions.</li>
+        </ul>
+        <pre><code>func TestWriteJSON(t *testing.T) {
+    app := newTestApplication(t)
+    rr := httptest.NewRecorder()
+    headers := http.Header{"X-Custom-Header": {"test-value"}}
+    data := map[string]string{"foo": "bar"}
+
+```
+err := app.writeJSON(rr, http.StatusOK, data, headers)
+assert.Equal(t, rr.Code, http.StatusOK)
+assert.Equal(t, rr.Header().Get("Content-Type"), "application/json")
+assert.Equal(t, rr.Header().Get("X-Custom-Header"), "test-value")
+expectedBody, _ := json.Marshal(data)
+expectedBody = append(expectedBody, '\n')
+assert.Equal(t, strings.TrimSpace(rr.Body.String()), strings.TrimSpace(string(expectedBody)))
+```
+
+}</code></pre> </li> <li>
+    Updated <strong>internal/assert/assert.go</strong>: <ul> <li>Imported <code>strings</code> for new helper.</li> <li>Added <code>StringContains</code> to assert substring presence.</li> </ul> <pre><code>func StringContains(t *testing.T, actual, expectedSubstring string) {
+    if !strings.Contains(actual, expectedSubstring) {
+        t.Errorf("got %q; expected to contain %q", actual, expectedSubstring)
+    }
+}</code></pre> </li>
+
+</ul>
+
+<h2>🧪 Test Verification</h2>
+<p>Run the helper tests:</p>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The <code>writeJSON</code> helper is now backed by unit tests, and the
+    assertion library has gained enhanced string‐containment checks for future tests.
+</p>
+
+</body>
+</html>
