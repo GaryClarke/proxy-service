@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 8-json-read-test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>8-json-read-test</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Add unit tests for the <code>readJSON</code> helper, covering all error scenarios
+    and verifying correct decoding of valid JSON into Go structs.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Enhanced <strong>cmd/api/helpers_test.go</strong>:
+        <ul>
+            <li>Imported <code>fmt</code> for dynamic test inputs.</li>
+            <li>Defined a <code>testReadStruct</code> with <code>Name</code> and <code>Age</code> fields.</li>
+            <li>Implemented <code>TestReadJSON</code> with sub-tests for:</li>
+            <ul>
+                <li><strong>Valid JSON:</strong> decodes into struct, no error.</li>
+                <li><strong>Malformed JSON:</strong> reports “body contains badly-formed JSON”.</li>
+                <li><strong>Unknown Field:</strong> reports “body contains unknown key”.</li>
+                <li><strong>Empty Body:</strong> reports “body must not be empty”.</li>
+                <li><strong>Multiple Objects:</strong> reports “body must only contain a single JSON value”.</li>
+                <li><strong>Oversized Payload:</strong> reports “body must not be larger than 1048576 bytes”.</li>
+            </ul>
+        </ul>
+        <pre><code>for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) {
+        req := httptest.NewRequest("POST", "/", strings.NewReader(tt.input))
+        rr  := httptest.NewRecorder()
+        var dst testReadStruct
+
+```
+    err := app.readJSON(rr, req, &dst)
+    if tt.expectedError == "" {
+        assert.NilFatalError(t, err)
+        assert.Equal(t, dst, *tt.expectedData)
+    } else {
+        assert.StringContains(t, err.Error(), tt.expectedError)
+    }
+})
+```
+
+}</code></pre> </li> <li>
+    Updated <strong>internal/assert/assert.go</strong>: <ul> <li>Added <code>NilError</code> and <code>NilFatalError</code> helpers to assert absence of errors.</li> </ul> <pre><code>func NilFatalError(t \*testing.T, actual error) {
+    t.Helper()
+    if actual != nil {
+        t.Fatalf("got %v; expected: nil error", actual)
+    }
+}</code></pre> </li>
+
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>// In helpers_test.go:
+req := httptest.NewRequest("POST", "/", strings.NewReader(`{"name":"Alice","age":30}`))
+rr  := httptest.NewRecorder()
+var dst testReadStruct
+
+err := app.readJSON(rr, req, &dst)
+// expect dst.Name=="Alice", dst.Age==30, err==nil</code></pre>
+
+<h2>🧪 Test Command</h2>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    Coverage for <code>readJSON</code> is now comprehensive, ensuring robust handling
+    of valid and invalid JSON inputs across various edge cases.
+</p>
+
+</body>
+</html>
