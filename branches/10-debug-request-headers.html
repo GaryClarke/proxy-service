@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: <code>10-debug-request-headers</code></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>10-debug-request-headers</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Extract header‐logging logic from the webhook handler into a dedicated helper
+    (<code>logHeaders</code>), and enable it conditionally based on a new
+    <code>debugMode</code> flag in config. Update tests and application setup
+    to support the debug toggle.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <strong>cmd/api/handlers.go</strong>
+        <ul>
+            <li>Removed inline header‐iteration loop.</li>
+            <li>Inserted call to <code>app.logHeaders(r)</code> at start of <code>webhookHandler</code>.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/helpers.go</strong>
+        <ul>
+            <li>Added <code>logHeaders(r *http.Request)</code> method: only logs each header when <code>config.debugMode</code> is <code>true</code>.</li>
+            <li>Extended <code>config</code> struct with <code>debugMode bool</code> field.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/main.go</strong>
+        <ul>
+            <li>Augmented <code>config</code> to include <code>debugMode</code>.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/testutils_test.go</strong>
+        <ul>
+            <li>Updated <code>newTestApplication</code> signature to accept <code>debug bool</code>.</li>
+            <li>Wired logger to <code>io.Discard</code> or <code>os.Stdout</code> based on debug flag.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/handlers_test.go</strong>
+        <ul>
+            <li>Updated calls to <code>newTestApplication</code> to pass explicit <code>debug</code> argument.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/helpers_test.go</strong>
+        <ul>
+            <li>Adjusted instantiation of test app with <code>debug</code> parameter.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>🛠️ Example Refactor</h2>
+<pre><code>// before:
+for name, values := range r.Header {
+    for _, value := range values {
+        app.logger.Info("header", "name", name, "value", value)
+    }
+}
+
+// after:
+app.logHeaders(r)
+
+// in helpers.go:
+func (app *application) logHeaders(r *http.Request) {
+    if app.config.debugMode {
+        for name, values := range r.Header {
+            for _, value := range values {
+                app.logger.Info("header", "name", name, "value", value)
+            }
+        }
+    }
+}</code></pre>
+
+<h2>🧪 Verification</h2>
+<p>All existing tests should pass with <code>debugMode</code> defaulting to <code>false</code>:</p>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    Header‐logging is now encapsulated and only active in <code>debugMode</code>,
+    improving clarity of the handler and avoiding noisy logs in production.
+</p>
+
+</body>
+</html>
