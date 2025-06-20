@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 6-read-json-helper</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>6-read-json-helper</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Centralize and harden JSON request parsing by adding a <code>readJSON</code> helper
+    that enforces size limits, rejects unknown fields, and returns clear, contextual errors.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <strong>cmd/api/helpers.go</strong>
+        <ul>
+            <li>Imported <code>errors</code>, <code>fmt</code>, <code>io</code>, and <code>strings</code>.</li>
+            <li>Added <code>readJSON</code> method on <code>application</code>:</li>
+            <pre><code>func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+    // Limit body to 1MB
+    r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+    decoder := json.NewDecoder(r.Body)
+    decoder.DisallowUnknownFields()
+
+```
+// Decode into dst, then handle errors:
+err := decoder.Decode(dst)
+switch {
+case errors.As(err, &json.SyntaxError{}):
+    return fmt.Errorf("body contains badly-formed JSON (at character %d)", syntaxErr.Offset)
+case errors.Is(err, io.ErrUnexpectedEOF):
+    return errors.New("body contains badly-formed JSON")
+case errors.As(err, &json.UnmarshalTypeError{}):
+    return fmt.Errorf("body contains incorrect JSON type for field %q", typeErr.Field)
+case errors.Is(err, io.EOF):
+    return errors.New("body must not be empty")
+case strings.HasPrefix(err.Error(), "json: unknown field"):
+    return fmt.Errorf("body contains unknown key %s", fieldName)
+case errors.As(err, &http.MaxBytesError{}):
+    return fmt.Errorf("body must not be larger than %d bytes", mbErr.Limit)
+default:
+    return err
+}
+// Ensure single JSON value
+if decoder.More() {
+    return errors.New("body must only contain a single JSON value")
+}
+return nil
+```
+
+}</code></pre> <li>
+            Enforces: <ul> <li>Max payload size (1 MB).</li> <li>No unknown fields (<code>DisallowUnknownFields</code>).</li> <li>Detailed error messages for syntax, type mismatches, empty bodies, oversized requests, and extraneous data.</li> </ul> </li> </ul> </li>
+
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>var reqPayload MyRequest
+if err := app.readJSON(w, r, &reqPayload); err != nil {
+    app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+    return
+}</code></pre>
+
+<h2>🧪 Test Command</h2>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The <code>readJSON</code> helper provides robust JSON parsing and validation, making
+    request handling safer and error reporting more developer-friendly.
+</p>
+
+</body>
+</html>
