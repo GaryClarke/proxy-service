@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 5-error-responses</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>5-error-responses</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Centralize JSON error responses with helper methods, add an envelope type for responses,
+    and replace ad-hoc <code>http.Error</code> calls in handlers with structured functions.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Created <strong>cmd/api/errors.go</strong>:
+        <pre><code>func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message any) {
+    env := envelope{"error": message}
+    if err := app.writeJSON(w, status, env, nil); err != nil {
+        app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+        w.WriteHeader(http.StatusInternalServerError)
+    }
+}
+
+func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+    app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+    app.errorResponse(w, r, http.StatusInternalServerError,
+        "the server encountered a problem and could not process your request")
+}</code></pre>
+    </li>
+    <li>
+        Updated <strong>cmd/api/helpers.go</strong>:
+        <pre><code>type envelope map[string]any</code></pre>
+        Introduced the <code>envelope</code> alias to wrap success/error payloads in JSON.
+    </li>
+    <li>
+        Refactored <strong>cmd/api/handlers.go</strong>:
+        <ul>
+            <li>Replaced raw <code>http.Error</code> in <code>healthcheckHandler</code> and <code>webhookHandler</code> with:
+                <code>app.serverErrorResponse(w, r, err)</code> and
+                <code>app.errorResponse(w, r, http.StatusUnprocessableEntity, err.Error())</code>.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>// In handlers.go:
+if err := app.writeJSON(w, http.StatusOK, data, nil); err != nil {
+    app.serverErrorResponse(w, r, err)
+}
+
+// In webhookHandler on decode error:
+app.errorResponse(w, r, http.StatusUnprocessableEntity, err.Error())</code></pre>
+
+<h2>🧪 Test Command</h2>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    Error handling is now consistent and JSON-formatted across the API, with clear
+    envelope wrapping and centralized logging for both client and server errors.
+</p>
+
+</body>
+</html>
