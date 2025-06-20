@@ -1,0 +1,73 @@
+Here’s the full HTML summary for **branch 2-add-webhook-model**:
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 2-add-webhook-model</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>2-add-webhook-model</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Introduce a typed representation for incoming webhook payloads and metadata
+    to prepare for structured decoding in the handler layer.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Added <strong>internal/webhook/webhook.go</strong>:
+        <pre><code>package webhook
+
+// Webhook represents an incoming webhook payload with associated metadata.
+type Webhook struct {
+Payload string `json:"payload"`
+Meta    Meta   `json:"meta"`
+}
+
+// Meta contains metadata information for a webhook.
+type Meta struct {
+Client       string `json:"client"`
+Notification string `json:"notification"`
+}</code></pre>
+        Defines: <ul> <li><code>Webhook.Payload</code>: raw JSON payload string.</li> <li><code>Webhook.Meta</code>: nested <code>Meta</code> struct with <code>Client</code> and <code>Notification</code> fields.</li> </ul> </li>
+
+</ul>
+
+<h2>🛠️ Example Snippet</h2>
+<pre><code>package webhook
+
+// Webhook represents an incoming webhook payload with associated metadata.
+type Webhook struct {
+Payload string `json:"payload"`
+Meta    Meta   `json:"meta"`
+}
+
+// Meta contains metadata information for a webhook.
+type Meta struct {
+Client       string `json:"client"`
+Notification string `json:"notification"`
+}</code></pre>
+
+<h2>🧪 Test Command</h2>
+<pre><code>go test ./internal/webhook</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    Webhook and Meta types are now defined, enabling structured JSON decoding of incoming webhooks.
+</p>
+
+</body>
+</html>
