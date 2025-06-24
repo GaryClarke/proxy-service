@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 14-initialize-delegator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1, h2 { color: #2c3e50; }
+        pre { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        ul { padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 14-initialize-delegator</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch wires up the <code>Delegator</code> into the HTTP handler pipeline so that incoming webhooks are dispatched to all registered handlers.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li><strong>In <code>handlers.go</code>:</strong>
+        <ul>
+            <li>Imported <code>context</code>.</li>
+            <li>After decoding the webhook JSON, call
+                <pre><code>app.handlerDelegator.Delegate(context.Background(), wh)</code></pre>
+                and handle any error by responding with <code>serverErrorResponse</code>.
+            </li>
+        </ul>
+    </li>
+    <li><strong>In <code>main.go</code>:</strong>
+        <ul>
+            <li>Imported the <code>handler</code> package.</li>
+            <li>Extended the <code>application</code> struct to include a <code>*handler.Delegator</code>.</li>
+            <li>Initialized <code>handlerDelegator</code> via <code>handler.NewHandlerDelegator()</code> when constructing <code>app</code>.</li>
+        </ul>
+    </li>
+    <li><strong>In <code>testutils_test.go</code>:</strong>
+        <ul>
+            <li>Updated <code>newTestApplication</code> to accept no arguments for the new field.</li>
+            <li>Assigned <code>handlerDelegator: handler.NewHandlerDelegator()</code> in test app construction.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Before &amp; After Snippet</h2>
+<pre><code>// Before (handlers.go)
+…
+var wh webhook.Webhook
+_ = json.NewDecoder(r.Body).Decode(&wh)
+
+// Respond immediately
+app.writeJSON(w, http.StatusNoContent, nil, nil)
+
+// After (handlers.go)
+…
+var wh webhook.Webhook
+_ = app.readJSON(w, r, &wh)
+
+// Dispatch to all registered handlers
+err = app.handlerDelegator.Delegate(context.Background(), wh)
+if err != nil {
+    app.serverErrorResponse(w, r, err)
+    return
+}
+
+// Then send 204
+app.writeJSON(w, http.StatusNoContent, nil, nil) </code></pre>
+
+<h2>Rationale</h2>
+<ul>
+    <li>Ensures that business logic for each webhook is encapsulated in <code>WebhookHandler</code> implementations and invoked centrally.</li>
+    <li>Makes error handling consistent: any handler failure results in a 500 response.</li>
+    <li>Maintains separation of concerns: <code>handlers.go</code> remains thin, delegating actual processing to the <code>Delegator</code>.</li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Register concrete <code>WebhookHandler</code> implementations when constructing the <code>Delegator</code> in <code>main.go</code>.</li>
+    <li>Add end-to-end integration tests to verify that real handlers receive and process webhooks correctly.</li>
+</ul>
+
+</body>
+</html>
