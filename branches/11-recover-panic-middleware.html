@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: <code>11-recover-panic-middleware</code></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>11-recover-panic-middleware</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Introduce a middleware to catch panics during request handling, ensure the connection is closed,
+    log the error, and respond with a 500 status via the existing error handling helpers.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <strong>cmd/api/middleware.go</strong> (new)
+        <ul>
+            <li>Added <code>recoverPanic(next http.Handler) http.Handler</code> middleware.</li>
+            <li>Middleware defers <code>recover()</code>, on panic sets <code>Connection: close</code>,
+                calls <code>serverErrorResponse</code> with the panic message.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>cmd/api/routes.go</strong>
+        <ul>
+            <li>Wrapped the main <code>mux</code> in <code>app.recoverPanic</code> before returning.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Tests</strong>
+        <ul>
+            <li>No changes required; existing tests continue to pass unmodified.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>🛠️ Code Example</h2>
+<pre><code>func (app *application) recoverPanic(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        defer func() {
+            if err := recover(); err != nil {
+                w.Header().Set("Connection", "close")
+                app.serverErrorResponse(w, r, fmt.Errorf("%s", err))
+            }
+        }()
+        next.ServeHTTP(w, r)
+    })
+}
+
+// In routes.go:
+func (app *application) routes() http.Handler {
+mux := http.NewServeMux()
+/* handlers... \*/
+return app.recoverPanic(mux)
+}</code></pre>
+
+<h2>🧪 Verification</h2>
+<p>Run full test suite to ensure no regressions:</p>
+<pre><code>go test ./cmd/api</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    Panic recovery is now centralized as middleware, improving resilience and ensuring consistent
+    error responses and connection handling on unexpected panics.
+</p>
+
+</body>
+</html>
