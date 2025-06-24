@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 13-delegator-test</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.5; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        code { font-family: Consolas, "Courier New", monospace; }
+        ul { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 13-delegator-test</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch adds comprehensive unit tests for the <code>Delegator</code> in the <code>internal/webhook/handler</code> package, ensuring that:
+</p>
+<ul>
+    <li>Handlers that declare support are invoked.</li>
+    <li>Errors returned by handlers are propagated.</li>
+    <li>Handlers that don’t support a webhook are skipped.</li>
+    <li>Multiple handlers run in sequence with correct behavior.</li>
+</ul>
+
+<h2>Key Changes</h2>
+<ul>
+    <li><strong>New test file:</strong> <code>internal/webhook/handler/handler_test.go</code>.</li>
+    <li><strong>fakeHandler:</strong>
+        <ul>
+            <li>Implements <code>supports(wh webhook.Webhook) bool</code> and <code>handle(ctx, wh) error</code>.</li>
+            <li>Records whether each method was called and whether to return an error.</li>
+        </ul>
+    </li>
+    <li><strong>TestDelegator_Delegate:</strong>
+        <ul>
+            <li>Table-driven tests covering four scenarios:
+                <ul>
+                    <li>Single supporting handler with no error.</li>
+                    <li>Single supporting handler that returns an error.</li>
+                    <li>Single non-supporting handler (skipped).</li>
+                    <li>Multiple handlers with mixed support.</li>
+                </ul>
+            </li>
+            <li>Converts <code>[]*fakeHandler</code> into <code>[]WebhookHandler</code> (manual slice conversion).</li>
+            <li>Asserts that <code>Delegate</code> returns the expected error (or nil), and that each handler’s <code>handle</code> was invoked only when <code>supports</code> returned true.</li>
+        </ul>
+    </li>
+    <li><strong>Assertion helpers:</strong> Uses <code>assert.NilError</code> and <code>assert.Equal</code> for clear, concise test failures.</li>
+</ul>
+
+<h2>Example Test Snippet</h2>
+<pre><code>func TestDelegator_Delegate(t *testing.T) {
+    testWebhook := webhook.Webhook{ /* ... */ }
+
+```
+tests := []struct {
+    name                 string
+    handlers             []*fakeHandler
+    expectedHandleCalled []bool
+    expectedError        error
+}{
+    {
+        name: "Handler supports and returns no error",
+        handlers: []*fakeHandler{
+            {shouldSupport: true, handleErr: nil},
+        },
+        expectedHandleCalled: []bool{true},
+        expectedError:        nil,
+    },
+    // … other cases …
+}
+
+for _, tt := range tests {
+    var handlers []WebhookHandler
+    for _, fh := range tt.handlers {
+        handlers = append(handlers, fh)
+    }
+    delegator := NewHandlerDelegator(handlers...)
+
+    err := delegator.Delegate(context.Background(), testWebhook)
+    if tt.expectedError != nil {
+        require.EqualError(t, err, tt.expectedError.Error())
+    } else {
+        assert.NilError(t, err)
+    }
+    for i, fh := range tt.handlers {
+        assert.Equal(t, fh.handleCalled, tt.expectedHandleCalled[i])
+    }
+}
+```
+
+}</code></pre>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Remove manual slice-conversion if Go adds slice covariance in the future.</li>
+    <li>Extend tests to cover chaining of multiple delegators or error accumulation strategies.</li>
+    <li>Integrate with higher-level webhook handler tests to ensure end-to-end behavior.</li>
+</ul>
+
+</body>
+</html>
