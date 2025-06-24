@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 16-model-sub-notes-payload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1, h2 { color: #2c3e50; }
+        pre { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        ul { padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>Branch Summary: 16-model-sub-notes-payload</h1>
+
+<h2>Overview</h2>
+<p>
+    This branch adds a set of Go data transfer objects (DTOs) to represent Apple subscription notification payloads in a structured way. All relevant fields from the incoming JSON are mapped into strongly typed Go structs under <code>internal/webhook/dto/subscription_notifications.go</code>.
+</p>
+
+<h2>Key Changes</h2>
+<ul>
+    <li><strong>New file:</strong> <code>internal/webhook/dto/subscription_notifications.go</code>
+        <ul>
+            <li><code>Subscription</code> struct captures the top-level payload, including:
+                <ul>
+                    <li><code>Properties</code> (identity, email, trial flag, etc.)</li>
+                    <li><code>EventTimeMillis</code>, <code>DeveloperNotification</code>, <code>SubscriptionPurchase</code></li>
+                    <li><code>JwsRenewalInfo</code> and <code>JwsTransaction</code> for JWS-based details</li>
+                    <li><code>ServerData</code> (notificationType, subType, UUID, version, bundle info)</li>
+                    <li><code>AirshipClaim</code> &amp; <code>AirshipChannelID</code></li>
+                </ul>
+            </li>
+            <li>Nested structs for each sub-object:
+                <ul>
+                    <li><code>SubscriptionProperties</code> (with pointers for optional values)</li>
+                    <li><code>JwsRenewalInfo</code> &amp; <code>JwsTransaction</code> with nullable fields as pointers</li>
+                    <li><code>ServerData</code> describing server metadata</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li><strong>Minimal updates:</strong>
+        <ul>
+            <li>Tweaked <code>AppleHandler.handle</code> TODO comment to clarify decoding into the new <code>Subscription</code> struct.</li>
+        </ul>
+    </li>
+</ul>
+
+<h2>Before &amp; After Snippet</h2>
+<pre><code>// Before (apple.go)
+func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
+    fmt.Println("Apple handler processing webhook:", wh)
+    // TODO: decode into struct
+    // TODO: validate brand
+    // ...
+    return nil
+}
+
+// After (apple.go)
+func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
+    fmt.Println("Apple handler processing webhook:", wh)
+    // TODO: decode into subscription struct
+    // TODO: validate brand
+    // ...
+    return nil
+} </code></pre>
+
+<h2>Rationale</h2>
+<ul>
+    <li>Provides a clear, type-safe representation of every field in the Apple subscription notification payload.</li>
+    <li>Enables easy decoding of JSON into Go structs using <code>json.Unmarshal</code> or a custom decoder.</li>
+    <li>Lays the groundwork for validation, transformation, and forwarding logic within <code>AppleHandler</code>.</li>
+</ul>
+
+<h2>Next Steps</h2>
+<ul>
+    <li>Implement JSON decoding in the handler:
+        <code>var dto dto.Subscription; app.readJSON(…,&dto)</code>.</li>
+    <li>Validate mandatory fields and handle optional values.</li>
+    <li>Map <code>dto.Subscription</code> to domain events and forward to Segment.</li>
+    <li>Write unit tests covering successful decoding and error scenarios.</li>
+</ul>
+
+</body>
+</html>
