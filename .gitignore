@@ -4,3 +4,4 @@ todo.txt
 .env
 tmp
 .air.toml
+http-client.env.json

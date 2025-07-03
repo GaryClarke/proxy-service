@@ -1,0 +1,18 @@
+### Healthcheck
+GET http://localhost:{{PORT}}/healthcheck
+Accept: application/json
+
+### Apple Webhook – Subscription Start
+POST http://localhost:{{PORT}}/webhook
+Content-Type: application/json
+
+{
+    "payload": "{\"payload\":{\"subscription\":{\"properties\":{\"identityId\":\"909365ca-7d09-457d-8f5e-433885a25573\",\"email\":\"example-apple@email.com\",\"memberStatus\":\"active\",\"entitlement\":\"APP - iOS\",\"timePeriod\":\"Annual\",\"currency\":\"USD\",\"startDate\":\"2106170000\",\"endDate\":\"2107170000\",\"promotionalOfferApplied\":false,\"productName\":\"exampleSku\",\"productId\":\"testAppleSku-1709199168\",\"platform\":\"ios\",\"client\":null,\"orderId\":null,\"originalTransactionId\":\"100000123456789\",\"version\":\"1.0\"},\"eventTimeMillis\":\"1623936000000\",\"developerNotification\":null,\"subscriptionPurchase\":null,\"jwsRenewalInfo\":{\"environment\":\"Sandbox\",\"originalTransactionId\":\"100000123456789\",\"productId\":\"exampleSku\",\"signedDate\":1623936000000,\"recentSubscriptionStartDate\":1623936000000,\"autoRenewProductId\":null,\"autoRenewStatus\":1,\"expirationIntent\":null,\"gracePeriodExpiresDate\":null,\"isInBillingRetryPeriod\":false,\"offerIdentifier\":null,\"offerType\":null,\"priceIncreaseStatus\":null},\"jwsTransaction\":{\"bundleId\":\"uk.co.bbc.goodfood2\",\"environment\":\"Sandbox\",\"originalTransactionId\":\"100000123456789\",\"productId\":\"testAppleSku\",\"expiresDate\":1623936000000,\"inAppOwnershipType\":\"PURCHASED\",\"originalPurchaseDate\":1623936000000,\"purchaseDate\":1623936000000,\"signedDate\":1623936000000,\"transactionId\":\"100000123456789\",\"type\":\"INITIAL_BUY\",\"quantity\":0,\"appAccountToken\":\"\",\"offerType\":null,\"offerIdentifier\":null,\"isUpgraded\":null,\"revocationDate\":null,\"revocationReason\":null,\"subscriptionGroupIdentifier\":null,\"webOrderLineItemId\":null},\"serverData\":{\"notificationType\":\"SUBSCRIBED\",\"subType\":\"INITIAL_BUY\",\"notificationUUID\":\"12345678-1234-1234-1234-123456789012\",\"notificationVersion\":\"1.0\",\"appAppleId\":null,\"bundleId\":\"com.example\",\"bundleVersion\":\"1.0\"},\"airshipClaim\":\"test-airship-id\",\"airshipChannelId\":\"146d6342-a4e8-4888-9c5e-f789a9a7af11\"}},\"notificationType\":\"mobile-purchase\"}",
+    "meta": {
+        "client": "Sub Notifications API",
+        "notification": "AppleIAPNotification"
+    }
+}
+
+
+

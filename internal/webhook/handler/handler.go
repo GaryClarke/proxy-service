@@ -3,7 +3,6 @@ package handler
 
 import (
 	"context"
-
 	"github.com/garyclarke/proxy-service/internal/webhook"
 )
 
