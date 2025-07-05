@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 63-add-debug-dump-helper</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>63-add-debug-dump-helper</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Provide a convenient “dump and die” debugging helper to pretty-print any value and halt execution immediately.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Created a new <code>debug</code> package under <code>internal/debug</code>.
+    </li>
+    <li>
+        Added <code>DD</code> function in <code>debug/debug.go</code>:
+        <pre><code>package debug
+
+import (
+"os"
+"github.com/davecgh/go-spew/spew"
+)
+
+// DD dumps whatever you pass in to stdout and then panics to stop execution.
+func DD(vals ...interface{}) {
+    spew.Fdump(os.Stdout, vals...)
+    panic("💥 debug dump – halting request")
+}</code></pre> </li> <li>
+    Enables replacing multi-line <code>spew.Fdump(…)</code> + <code>panic(…)</code> with a single call: <pre><code>debug.DD(variable)</code></pre> </li> <li> <strong>Design Note:</strong> We considered extracting this helper into its own library, but given its minimal footprint and the additional dependency overhead, we opted to keep it in-house. </li>
+
+</ul>
+
+<h2>🧪 Usage</h2>
+<p>
+    Import and invoke <code>debug.DD(...)</code> anywhere in your code to inspect values and stop processing:
+</p>
+<pre><code>import "github.com/garyclarke/proxy-service/internal/debug"
+
+func someHandler(...) {
+    debug.DD(someStruct, otherVar)
+    // execution halts here
+}</code></pre>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The new <code>DD</code> helper streamlines the debugging workflow by condensing the common “dump and die” pattern into one function call, while avoiding unnecessary external dependencies.
+</p>
+
+</body>
+</html>
