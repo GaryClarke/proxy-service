@@ -3,7 +3,7 @@
         "name": "subscription_started",
         "sub_status": "Subscriber",
         "category": "CATEGORY_START",
-        "notification_type": "PURCHASED",
+        "notification_type": 4,
         "sub_type": null,
         "in_trial": false
     },
@@ -11,7 +11,7 @@
         "name": "subscription_started",
         "sub_status": "First time subscriber",
         "category": "CATEGORY_START",
-        "notification_type": "PURCHASED",
+        "notification_type": 4,
         "sub_type": null,
         "in_trial": true
     },
@@ -19,7 +19,7 @@
         "name": "subscription_renewed",
         "sub_status": "Subscriber",
         "category": "CATEGORY_RENEW",
-        "notification_type": "RENEWED",
+        "notification_type": 2,
         "sub_type": null,
         "in_trial": null
     },
@@ -27,7 +27,7 @@
         "name": "subscription_on_hold",
         "sub_status": "On hold",
         "category": "CATEGORY_RENEW",
-        "notification_type": "ON_HOLD",
+        "notification_type": 5,
         "sub_type": null,
         "in_trial": null
     },
@@ -35,7 +35,7 @@
         "name": "subscription_paused",
         "sub_status": "Paused",
         "category": "CATEGORY_RENEW",
-        "notification_type": "PAUSED",
+        "notification_type": 10,
         "sub_type": null,
         "in_trial": null
     },
@@ -43,7 +43,7 @@
         "name": "subscription_reactivated",
         "sub_status": "Reactivated",
         "category": "CATEGORY_RENEW",
-        "notification_type": "RECOVERED",
+        "notification_type": 1,
         "sub_type": null,
         "in_trial": false
     },
@@ -51,7 +51,7 @@
         "name": "subscription_reactivated",
         "sub_status": "Reactivated in trial",
         "category": "CATEGORY_RENEW",
-        "notification_type": "RECOVERED",
+        "notification_type": 1,
         "sub_type": null,
         "in_trial": true
     },
@@ -59,7 +59,7 @@
         "name": "subscription_restarted",
         "sub_status": "Subscriber",
         "category": "CATEGORY_RENEW",
-        "notification_type": "RESTARTED",
+        "notification_type": 7,
         "sub_type": null,
         "in_trial": null
     },
@@ -67,7 +67,7 @@
         "name": "subscription_cancelled",
         "sub_status": "Cancelled",
         "category": "CATEGORY_STOP",
-        "notification_type": "CANCELLED",
+        "notification_type": 3,
         "sub_type": null,
         "in_trial": false
     },
@@ -75,7 +75,7 @@
         "name": "subscription_cancelled",
         "sub_status": "Cancelled during trial",
         "category": "CATEGORY_STOP",
-        "notification_type": "CANCELLED",
+        "notification_type": 3,
         "sub_type": null,
         "in_trial": true
     },
@@ -83,7 +83,7 @@
         "name": "subscription_revoked",
         "sub_status": "Expired",
         "category": "CATEGORY_STOP",
-        "notification_type": "EXPIRED",
+        "notification_type": 13,
         "sub_type": null,
         "in_trial": false
     },
@@ -91,7 +91,7 @@
         "name": "subscription_revoked",
         "sub_status": "Expired during trial",
         "category": "CATEGORY_STOP",
-        "notification_type": "EXPIRED",
+        "notification_type": 13,
         "sub_type": null,
         "in_trial": true
     },
@@ -99,7 +99,7 @@
         "name": "subscription_revoked",
         "sub_status": "Expired",
         "category": "CATEGORY_STOP",
-        "notification_type": "REVOKED",
+        "notification_type": 12,
         "sub_type": null,
         "in_trial": false
     },
@@ -107,7 +107,7 @@
         "name": "subscription_revoked",
         "sub_status": "Expired during trial",
         "category": "CATEGORY_STOP",
-        "notification_type": "REVOKED",
+        "notification_type": 12,
         "sub_type": null,
         "in_trial": true
     }

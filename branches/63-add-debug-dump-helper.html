@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Branch Summary: 63-add-debug-dump-helper</title>
+    <title>Branch Summary: add-google-subscription-tests</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
         h1 { color: #2c3e50; }
@@ -15,50 +14,40 @@
 </head>
 <body>
 
-<h1>✅ Branch Summary: <code>63-add-debug-dump-helper</code></h1>
+<h1>✅ Branch Summary: <code>add-google-subscription-tests</code></h1>
 
 <h2>📌 Purpose</h2>
 <p>
-    Provide a convenient “dump and die” debugging helper to pretty-print any value and halt execution immediately.
+    Scaffold out Google Real-Time Developer Notification (RTDN) test harness and payload helpers, mirroring the existing Apple flow,
+    so we can incrementally build the Google subscription handler.
 </p>
 
 <h2>🔑 Key Changes</h2>
 <ul>
     <li>
-        Created a new <code>debug</code> package under <code>internal/debug</code>.
+        <code>getPayload</code> helper renamed to <code>getApplePayload</code> and refactored to use an unescaped inner JSON + <code>strings.ReplaceAll</code> for readability.
     </li>
     <li>
-        Added <code>DD</code> function in <code>debug/debug.go</code>:
-        <pre><code>package debug
-
-import (
-"os"
-"github.com/davecgh/go-spew/spew"
-)
-
-// DD dumps whatever you pass in to stdout and then panics to stop execution.
-func DD(vals ...interface{}) {
-    spew.Fdump(os.Stdout, vals...)
-    panic("💥 debug dump – halting request")
-}</code></pre> </li> <li>
-    Enables replacing multi-line <code>spew.Fdump(…)</code> + <code>panic(…)</code> with a single call: <pre><code>debug.DD(variable)</code></pre> </li> <li> <strong>Design Note:</strong> We considered extracting this helper into its own library, but given its minimal footprint and the additional dependency overhead, we opted to keep it in-house. </li>
-
+        Introduced <code>getGooglePayload</code> in <code>cmd/api/handlers_test.go</code> to generate Google RTDN payloads with the same pattern.
+    </li>
+    <li>
+        Added <code>TestWebhookHandler_GoogleScenarios</code> with an initial “Subscription Start | Not in trial” test case asserting a <code>204 No Content</code> response.
+    </li>
+    <li>
+        Created <code>internal/webhook/google/lookup.go</code> as a stub for future Google notification constants and mapping logic.
+    </li>
 </ul>
 
-<h2>🧪 Usage</h2>
-<p>
-    Import and invoke <code>debug.DD(...)</code> anywhere in your code to inspect values and stop processing:
-</p>
-<pre><code>import "github.com/garyclarke/proxy-service/internal/debug"
-
-func someHandler(...) {
-    debug.DD(someStruct, otherVar)
-    // execution halts here
-}</code></pre>
+<h2>🧪 Next Steps</h2>
+<ul>
+    <li>Implement <code>GoogleSubscriptionHandler</code>, DTO parsing, and wire in the JSON lookup + constants for full end-to-end behavior.</li>
+    <li>Extend test cases to cover additional Google notifications (renewals, cancellations, etc.) by adding entries to the lookup file.</li>
+</ul>
 
 <h2>📘 Conclusion</h2>
 <p>
-    The new <code>DD</code> helper streamlines the debugging workflow by condensing the common “dump and die” pattern into one function call, while avoiding unnecessary external dependencies.
+    This commit lays the groundwork for Google subscription support by scaffolding test payload generation and initial test cases—enabling a test-driven
+    approach as we build out the handler logic in the next phase.
 </p>
 
 </body>

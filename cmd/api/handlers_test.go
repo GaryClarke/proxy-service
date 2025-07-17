@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -23,7 +24,6 @@ const (
 	testProductName      = "exampleSku"
 	testRenewalDate      = "2021-07-17T00:00:00Z"
 	testStartDate        = "2021-06-17T00:00:00Z"
-	testPlatform         = "ios"
 )
 
 func TestHealthcheckHandler(t *testing.T) {
@@ -77,10 +77,10 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 	}{
 		{
 			name: "Subscription Start|Initial Buy|Not in trial",
-			payload: getPayload(
+			payload: getApplePayload(
 				"SUBSCRIBED",
 				"INITIAL_BUY",
-				"100000123456789",
+				testSubscriptionID,
 				"uk.co.bbc.goodfood2",
 				false,
 				1,
@@ -103,7 +103,7 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 				false,                   // inTrial
 				true,                    // autoRenew
 				"INITIAL_BUY",           // subType (notification subtype)
-				testPlatform,            // platform (from payload JSON)
+				"ios",                   // platform (from payload JSON)
 			),
 		},
 	}
@@ -132,6 +132,47 @@ func TestWebhookHandler_AppleScenarios(t *testing.T) {
 			assert.Len(t, spy.Tracks, 1)
 			gotTrack := spy.Tracks[0]
 			assert.Equal(t, tt.expectedTrack, gotTrack)
+		})
+	}
+}
+
+func TestWebhookHandler_GoogleScenarios(t *testing.T) {
+	// Define a set of test cases for various Google subscription scenarios.
+	tests := []struct {
+		name           string
+		payload        string
+		expectedStatus int
+		//expectedIdentify analytics.Identify
+		//expectedTrack    analytics.Track
+		// Optionally, expected error message etc.
+	}{
+		{
+			name: "Subscription Start|Not in trial",
+			payload: getGooglePayload(
+				4,     // notificationType = PURCHASED
+				false, // inTrial = false
+				true,  // autoRenewing = true (default Google behavior)
+				testSubscriptionID,
+				"uk.co.bbc.goodfood2",
+			),
+			expectedStatus: http.StatusNoContent,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // capture range variable
+		t.Run(tt.name, func(t *testing.T) {
+			// 1) fresh spy, app, and test server per test
+			spy := &segment.SpyClient{}
+			app := newTestApplication(t, false, spy)
+			ts := newTestServer(t, app.routes())
+			defer ts.Close()
+
+			// 2) exercise endpoint
+			code, _, _ := ts.postJSON(t, "/webhook", tt.payload)
+
+			// 3) assert HTTP response
+			assert.Equal(t, tt.expectedStatus, code)
 		})
 	}
 }
@@ -212,12 +253,32 @@ func expectedTrackModel(
 	}
 }
 
-// getPayload returns a JSON payload string for testing purposes.
-func getPayload(
+// getApplePayload returns a JSON payload string for testing purposes.
+func getApplePayload(
 	notificationType, subType, transactionId, brand string,
 	inTrial bool,
 	autoRenewStatus int,
 ) string {
-	return fmt.Sprintf(`{"payload": "{\"payload\":{\"subscription\":{\"properties\":{\"identityId\":\"909365ca-7d09-457d-8f5e-433885a25573\",\"email\":\"example-apple@email.com\",\"memberStatus\":\"active\",\"entitlement\":\"APP - iOS\",\"timePeriod\":\"Annual\",\"currency\":\"USD\",\"startDate\":\"2106170000\",\"endDate\":\"2107170000\",\"promotionalOfferApplied\":%t,\"productName\":\"exampleSku\",\"productId\":\"testAppleSku-1709199168\",\"platform\":\"ios\",\"client\":null,\"orderId\":null,\"originalTransactionId\":\"%s\",\"version\":\"1.0\"},\"eventTimeMillis\":\"1623936000000\",\"developerNotification\":null,\"subscriptionPurchase\":null,\"jwsRenewalInfo\":{\"environment\":\"Sandbox\",\"originalTransactionId\":\"%s\",\"productId\":\"exampleSku\",\"signedDate\":1623936000000,\"recentSubscriptionStartDate\":1623936000000,\"autoRenewProductId\":null,\"autoRenewStatus\":%d,\"expirationIntent\":null,\"gracePeriodExpiresDate\":null,\"isInBillingRetryPeriod\":false,\"offerIdentifier\":null,\"offerType\":null,\"priceIncreaseStatus\":null},\"jwsTransaction\":{\"bundleId\":\"%s\",\"environment\":\"Sandbox\",\"originalTransactionId\":\"%s\",\"productId\":\"testAppleSku\",\"expiresDate\":1623936000000,\"inAppOwnershipType\":\"PURCHASED\",\"originalPurchaseDate\":1623936000000,\"purchaseDate\":1623936000000,\"signedDate\":1623936000000,\"transactionId\":\"100000123456789\",\"type\":\"%s\",\"quantity\":0,\"appAccountToken\":\"\",\"offerType\":null,\"offerIdentifier\":null,\"isUpgraded\":null,\"revocationDate\":null,\"revocationReason\":null,\"subscriptionGroupIdentifier\":null,\"webOrderLineItemId\":null},\"serverData\":{\"notificationType\":\"%s\",\"subType\":\"%s\",\"notificationUUID\":\"12345678-1234-1234-1234-123456789012\",\"notificationVersion\":\"1.0\",\"appAppleId\":null,\"bundleId\":\"com.example\",\"bundleVersion\":\"1.0\"},\"airshipClaim\":\"test-airship-id\",\"airshipChannelId\":\"test-airship-channel\"}},\"notificationType\":\"mobile-purchase\"}", "meta": {"client": "Sub Notifications API","notification": "AppleIAPNotification"}}`,
-		inTrial, transactionId, transactionId, autoRenewStatus, brand, transactionId, subType, notificationType, subType)
+	inner := fmt.Sprintf(`{"payload":{"subscription":{"properties":{"identityId":"%s","email":"example-apple@email.com","memberStatus":"active","entitlement":"APP - iOS","timePeriod":"Annual","currency":"USD","startDate":"2106170000","endDate":"2107170000","promotionalOfferApplied":%t,"productName":"exampleSku","productId":"testAppleSku-1709199168","platform":"ios","client":null,"orderId":null,"originalTransactionId":"%s","version":"1.0"},"eventTimeMillis":"1623936000000","developerNotification":null,"subscriptionPurchase":null,"jwsRenewalInfo":{"environment":"Sandbox","originalTransactionId":"%s","productId":"exampleSku","signedDate":1623936000000,"recentSubscriptionStartDate":1623936000000,"autoRenewProductId":null,"autoRenewStatus":%d,"expirationIntent":null,"gracePeriodExpiresDate":null,"isInBillingRetryPeriod":false,"offerIdentifier":null,"offerType":null,"priceIncreaseStatus":null},"jwsTransaction":{"bundleId":"%s","environment":"Sandbox","originalTransactionId":"%s","productId":"testAppleSku","expiresDate":1623936000000,"inAppOwnershipType":"PURCHASED","originalPurchaseDate":1623936000000,"purchaseDate":1623936000000,"signedDate":1623936000000,"transactionId":"100000123456789","type":"%s","quantity":0,"appAccountToken":"","offerType":null,"offerIdentifier":null,"isUpgraded":null,"revocationDate":null,"revocationReason":null,"subscriptionGroupIdentifier":null,"webOrderLineItemId":null},"serverData":{"notificationType":"%s","subType":"%s","notificationUUID":"12345678-1234-1234-1234-123456789012","notificationVersion":"1.0","appAppleId":null,"bundleId":"com.example","bundleVersion":"1.0"},"airshipClaim":"%s","airshipChannelId":"%s"}},"notificationType":"mobile-purchase"}`,
+		testUserID, inTrial, transactionId, transactionId, autoRenewStatus, brand, transactionId, subType, notificationType, subType, testAirshipID, testAirshipChannelID)
+
+	escaped := strings.ReplaceAll(inner, `"`, `\"`)
+
+	return fmt.Sprintf(`{"payload":"%s","meta":{"client":"Sub Notifications API","notification":"AppleIAPNotification"}}`, escaped)
+}
+
+// getGooglePayload returns a JSON payload string for Google tests.
+func getGooglePayload(
+	notificationType int,
+	inTrial bool,
+	autoRenewing bool,
+	subscriptionID, brand string,
+) string {
+	inner := fmt.Sprintf(`{"payload":{"subscription":{"properties":{"identityId":"%s","email":"example@email.com","memberStatus":"active","entitlement":"APP - Android","timePeriod":"Annual","currency":"USD","startDate":"2021-06-17T00:00:00.000Z","endDate":"2021-07-17T00:00:00.000Z","promotionalOfferApplied":%t,"productName":"exampleSku","productId":"testGoogleSku-1709199168","platform":"android","client":null,"orderId":"%s","originalTransactionId":null,"version":null},"eventTimeMillis":"1709199142000","developerNotification":{"version":"1.0","packageName":"%s","eventTimeMillis":"1623936000000","subscriptionNotification":{"version":"1.0","notificationType":%d,"purchaseToken":"token","subscriptionId":"%s"}},"subscriptionPurchase":{"latestOrderId":"%s","paymentState":"2","packageName":"%s","productId":"testGoogleSku","purchaseTimeMillis":"1623936000000","purchaseState":0,"purchaseToken":"token","acknowledged":false,"lineItems":[{"expiryTime":"2024-05-14T09:23:27.845Z","productId":"goodfood_a_annual_30_freetrial","autoRenewingPlan":{"autoRenewEnabled":false},"offerDetails":{"basePlanId":"goodfood-a-annual-30-freetrial1","offerId":null,"offerTags":null}},{"expiryTime":"2026-05-14T09:23:27.845Z","productId":"goodfood_a_annual_30_freetrial","autoRenewingPlan":{"autoRenewEnabled":%t},"offerDetails":{"basePlanId":"goodfood-a-annual-30-freetrial1","offerId":null,"offerTags":null}}]},"jwsRenewalInfo":null,"jwsTransaction":null,"serverData":null,"airshipClaim":"%s","airshipChannelId":"%s"}},"notificationType":"mobile-purchase"}`,
+		testUserID, inTrial, subscriptionID, brand, notificationType, subscriptionID,
+		subscriptionID, brand, autoRenewing, testAirshipID, testAirshipChannelID)
+
+	escaped := strings.ReplaceAll(inner, `"`, `\"`)
+
+	return fmt.Sprintf(`{"payload":"%s","meta":{"client":"Sub Notifications API","notification":"GoogleIAPNotification"}}`, escaped)
 }
