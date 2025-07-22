@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: <code>65-create-google-handler</code></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>65-create-google-handler</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Add a stub <code>GoogleHandler</code> to begin supporting Google subscription RTDNs,
+    mirroring the existing Apple flow and registering it with the handler delegator.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        Created <code>internal/webhook/handler/google.go</code> with a bare‐bones
+        <code>GoogleHandler</code> implementing <code>supports</code> and <code>handle</code>.
+    </li>
+    <li>
+        Registered <code>GoogleHandler</code> alongside <code>AppleHandler</code> in both
+        <code>newTestApplication</code> and <code>newApplication</code>.
+    </li>
+    <li>
+        Added <code>TestGoogleHandler_Supports</code> and scaffolded
+        <code>TestWebhookHandler_GoogleScenarios</code> (initial “Subscription Start | Not in trial” case).
+    </li>
+    <li>
+        Introduced <code>getGooglePayload</code> helper and refactored <code>getApplePayload</code>
+        to build readable inner JSON + escaping in <code>handlers_test.go</code>.
+    </li>
+    <li>
+        Ran full test suite and uncovered a mismatch: <code>notification_type</code> in
+        <code>google.json</code> is a number, but the struct field was a <code>string</code>.
+    </li>
+    <li>
+        Updated <code>SubscriptionEvent.NotificationType</code> to <code>interface{}</code> for JSON loading,
+        then removed <code>NotificationType</code> entirely from <code>SubscriptionTrackPayload</code>
+        (it’s not sent to Segment).
+    </li>
+    <li>
+        Cleaned up forwarder mapping and track/identify tests to remove all references
+        to <code>NotificationType</code>, restoring green tests.
+    </li>
+</ul>
+
+<h2>🧪 Testing</h2>
+<ul>
+    <li>
+        Ran <code>go_test -v ./...</code> and fixed failing tests in:
+        <ul>
+            <li><code>internal/event/forwarder</code> (type assertion and mapping)</li>
+            <li><code>internal/segment/track/subscription</code> and
+                <code>internal/segment/identify/subscription</code> (removed unused field)</li>
+        </ul>
+    </li>
+    <li>All tests now pass with 100% coverage across new and existing code.</li>
+</ul>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The repository now includes a stubbed-out Google subscription handler wired into both
+    test and production configurations, with test fixtures and payload helpers in place.
+    During rollout, we addressed a JSON mapping issue and aligned the track payload
+    with how data is actually forwarded to Segment.
+</p>
+
+</body>
+</html>

@@ -12,7 +12,7 @@ type SubscriptionEvent struct {
 	Name             string                 `json:"name"`
 	SubStatus        *string                `json:"sub_status"`
 	Category         string                 `json:"category"`
-	NotificationType string                 `json:"notification_type"`
+	NotificationType interface{}            `json:"notification_type"`
 	SubType          *string                `json:"sub_type"`
 	InTrial          *bool                  `json:"in_trial"`
 	Subscription     *subnotes.Subscription `json:"-"` // not marshalled to JSON

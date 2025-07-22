@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/garyclarke/proxy-service/internal/ptr"
+	"github.com/garyclarke/proxy-service/internal/webhook"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +12,30 @@ import (
 	"github.com/garyclarke/proxy-service/internal/testutil"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 )
+
+func TestAppleHandler_Supports(t *testing.T) {
+	h := NewAppleHandler(nil) // forwarders don’t matter for supports()
+
+	cases := []struct {
+		name  string
+		notif string
+		want  bool
+	}{
+		{"exact match", AppleNotification, true},
+		{"wrong notif", "FooBar", false},
+		{"google notif", "GoogleIAPNotification", false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			wh := webhook.Webhook{
+				Meta: webhook.Meta{Notification: tc.notif},
+			}
+			got := h.supports(wh)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
 
 func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {
 	// Build a valid payload using the shared test utility function.

@@ -51,7 +51,6 @@ func Test_mapToSubscriptionTrackPayload(t *testing.T) {
 	assert.Equal(t, brand.GF, got.BrandCode)
 	assert.Equal(t, "txn-789", got.SubscriptionID)
 	assert.Equal(t, ptr.Str("USD"), got.Currency)
-	assert.Equal(t, "SUBSCRIBED", got.NotificationType)
 	assert.Equal(t, event.CategoryStart, got.Category)
 
 	// Pointers

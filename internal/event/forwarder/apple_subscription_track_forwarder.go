@@ -64,7 +64,6 @@ func mapToSubscriptionTrackPayload(e *event.SubscriptionEvent) track.Subscriptio
 		WithOffer:        ptr.Bool(sub.Properties.PromotionalOfferApplied),
 		RenewalDate:      timeutil.ParseSubscriptionDate(sub.Properties.EndDate),
 		StartDate:        timeutil.ParseSubscriptionDate(sub.Properties.StartDate),
-		NotificationType: e.NotificationType,
 		SubType:          e.SubType,
 		Category:         e.Category,
 		Platform:         sub.Properties.Platform,

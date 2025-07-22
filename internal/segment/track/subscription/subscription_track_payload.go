@@ -28,7 +28,6 @@ type SubscriptionTrackPayload struct {
 	WithOffer        *bool
 	RenewalDate      *string
 	StartDate        *string
-	NotificationType string
 	SubType          *string
 	Category         string
 	Platform         *string
@@ -87,7 +86,6 @@ func (p *SubscriptionTrackPayload) Validate() error {
 	v.CheckField(validator.NotBlank(p.UserID), "userId", "must not be blank")
 	v.CheckField(validator.NotBlank(p.AccountGuid), "accountGuid", "must not be blank")
 	v.CheckField(validator.NotBlank(p.SubscriptionID), "subscriptionId", "must not be blank")
-	v.CheckField(validator.NotBlank(p.NotificationType), "notificationType", "must not be blank")
 	v.CheckField(validator.NotBlank(p.Category), "category", "must not be blank")
 
 	// Brand must be one of the allowed brands

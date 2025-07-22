@@ -38,7 +38,8 @@ func newApplication(cfg config.Config) (*application, error) {
 	}
 
 	appleHandler := handler.NewAppleHandler(appleForwarders)
-	delegator := handler.NewHandlerDelegator(appleHandler)
+	googleHandler := handler.NewGoogleHandler()
+	delegator := handler.NewHandlerDelegator(appleHandler, googleHandler)
 
 	return &application{
 		config:           cfg,

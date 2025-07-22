@@ -42,7 +42,8 @@ func newTestApplication(t *testing.T, debug bool, segmentClient segment.Client) 
 		forwarder.NewAppleSubscriptionTrackForwarder(segmentClient),
 	}
 	appleHandler := handler.NewAppleHandler(forwarders)
-	handlerDelegator := handler.NewHandlerDelegator(appleHandler)
+	googleHandler := handler.NewGoogleHandler()
+	handlerDelegator := handler.NewHandlerDelegator(appleHandler, googleHandler)
 
 	return &application{
 		config: config.Config{

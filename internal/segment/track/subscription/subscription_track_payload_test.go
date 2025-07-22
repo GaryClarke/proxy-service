@@ -37,7 +37,6 @@ func TestSubscriptionTrackPayload_ToTrack(t *testing.T) {
 				WithOffer:        ptr.Bool(true),
 				RenewalDate:      ptr.Str("2025-06-01"),
 				StartDate:        ptr.Str("2025-05-01"),
-				NotificationType: "renewal",
 				SubType:          ptr.Str("app"),
 				Category:         "subscription",
 			},
@@ -67,14 +66,13 @@ func TestSubscriptionTrackPayload_ToTrack(t *testing.T) {
 		{
 			name: "minimal (nil pointers)",
 			payload: track.SubscriptionTrackPayload{
-				Event:            "Subscription Cancelled",
-				UserID:           "user-123",
-				BrandCode:        brand.GF,
-				AccountGuid:      "acct-abc",
-				SubscriptionID:   "sub-xyz",
-				NotificationType: "cancel",
-				Category:         "subscription",
-				ProductName:      ptr.Str("goodfood+"),
+				Event:          "Subscription Cancelled",
+				UserID:         "user-123",
+				BrandCode:      brand.GF,
+				AccountGuid:    "acct-abc",
+				SubscriptionID: "sub-xyz",
+				Category:       "subscription",
+				ProductName:    ptr.Str("goodfood+"),
 			},
 			wantBrandCode: "gf",
 			wantTraits: map[string]interface{}{
@@ -112,14 +110,13 @@ func TestSubscriptionTrackPayload_Validate(t *testing.T) {
 		{
 			name: "happy path",
 			payload: track.SubscriptionTrackPayload{
-				Event:            "ev",
-				UserID:           "u1",
-				BrandCode:        brand.GF,
-				AccountGuid:      "u1",
-				SubscriptionID:   "s1",
-				NotificationType: "nt",
-				Category:         event.CategoryStart,
-				ProductName:      ptr.Str("goodfood+"),
+				Event:          "ev",
+				UserID:         "u1",
+				BrandCode:      brand.GF,
+				AccountGuid:    "u1",
+				SubscriptionID: "s1",
+				Category:       event.CategoryStart,
+				ProductName:    ptr.Str("goodfood+"),
 			},
 			wantErr: false,
 		},
@@ -129,7 +126,7 @@ func TestSubscriptionTrackPayload_Validate(t *testing.T) {
 				// leave everything blank
 			},
 			wantErr:    true,
-			wantFields: []string{"event", "userId", "accountGuid", "subscriptionId", "notificationType", "category", "brandCode", "productName"},
+			wantFields: []string{"event", "userId", "accountGuid", "subscriptionId", "category", "brandCode", "productName"},
 		},
 	}
 
