@@ -13,21 +13,63 @@ type SubscriptionPayload struct {
 // Sub notes nests everything related to the subscription inside here
 type Subscription struct {
 	Properties            SubscriptionProperties `json:"properties"`
-	EventTimeMillis       string                 `json:"eventTimeMillis"`
-	DeveloperNotification *DeveloperNotification `json:"developerNotification"`
-	SubscriptionPurchase  *SubscriptionPurchase  `json:"subscriptionPurchase"`
-	JwsRenewalInfo        *JwsRenewalInfo        `json:"jwsRenewalInfo"`
-	JwsTransaction        *JwsTransaction        `json:"jwsTransaction"`
-	ServerData            *ServerData            `json:"serverData"`
-	AirshipClaim          *string                `json:"airshipClaim"`
-	AirshipChannelID      *string                `json:"airshipChannelId"`
+	EventTimeMillis       string                 `json:"eventTimeMillis"`       // Android -> eventTimeMillis, iOS signedDate
+	DeveloperNotification *DeveloperNotification `json:"developerNotification"` // Android only
+	SubscriptionPurchase  *SubscriptionPurchase  `json:"subscriptionPurchase"`  // Android only
+	JwsRenewalInfo        *JwsRenewalInfo        `json:"jwsRenewalInfo"`        // iOS only
+	JwsTransaction        *JwsTransaction        `json:"jwsTransaction"`        // iOS only
+	ServerData            *ServerData            `json:"serverData"`            // iOS only
+	AirshipClaim          *string                `json:"airshipClaim"`          // Only if available
+	AirshipChannelID      *string                `json:"airshipChannelId"`      // Only if available
 	Brand                 brand.Brand            `json:"-"`
 }
 
 type DeveloperNotification struct {
+	Version                  string                    `json:"version"`
+	PackageName              string                    `json:"packageName"`
+	EventTimeMillis          string                    `json:"eventTimeMillis"`
+	SubscriptionNotification *SubscriptionNotification `json:"subscriptionNotification"`
 }
 
+// SubscriptionPurchase corresponds to Google’s SubscriptionPurchaseV2.
 type SubscriptionPurchase struct {
+	LatestOrderID      string                         `json:"latestOrderId"`
+	PaymentState       string                         `json:"paymentState"`
+	PackageName        string                         `json:"packageName"`
+	ProductID          string                         `json:"productId"`
+	PurchaseTimeMillis string                         `json:"purchaseTimeMillis"`
+	PurchaseState      int                            `json:"purchaseState"`
+	PurchaseToken      string                         `json:"purchaseToken"`
+	Acknowledged       bool                           `json:"acknowledged"`
+	LineItems          []SubscriptionPurchaseLineItem `json:"lineItems"`
+}
+
+// SubscriptionPurchaseLineItem represents each element in the lineItems array.
+type SubscriptionPurchaseLineItem struct {
+	ExpiryTime       string                   `json:"expiryTime"`
+	ProductID        string                   `json:"productId"`
+	AutoRenewingPlan AutoRenewingPlan         `json:"autoRenewingPlan"`
+	OfferDetails     SubscriptionOfferDetails `json:"offerDetails"`
+}
+
+// AutoRenewingPlan matches the nested autoRenewingPlan block.
+type AutoRenewingPlan struct {
+	AutoRenewEnabled bool `json:"autoRenewEnabled"`
+}
+
+// SubscriptionOfferDetails matches the nested offerDetails block.
+type SubscriptionOfferDetails struct {
+	BasePlanID string   `json:"basePlanId"`
+	OfferID    *string  `json:"offerId"`
+	OfferTags  []string `json:"offerTags"`
+}
+
+// SubscriptionNotification carries the fields we care about for subscriptions.
+type SubscriptionNotification struct {
+	Version          string `json:"version"`
+	NotificationType int    `json:"notificationType"`
+	PurchaseToken    string `json:"purchaseToken"`
+	SubscriptionId   string `json:"subscriptionId"`
 }
 
 type SubscriptionProperties struct {

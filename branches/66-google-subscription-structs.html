@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: <code>66-google-subscription-structs</code></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>66-google-subscription-structs</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Flesh out the Go DTOs for Google subscription payloads—mirroring the shared S2S Notifications Common model
+    and PHP classes—so that <code>DeveloperNotification</code>, <code>SubscriptionPurchase</code> (with nested
+    <code>LineItems</code>), and related structs are fully defined and ready for decoding.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <b>internal/webhook/dto/subnotes/subscription.go</b><br>
+        - Added detailed struct comments marking Android‐only and iOS‐only sections.<br>
+        - Updated <code>Subscription</code> to include pointers for <code>DeveloperNotification</code> and
+        <code>SubscriptionPurchase</code>.
+    </li>
+    <li>
+        <b>DeveloperNotification struct</b><br>
+        - Defined fields <code>Version</code>, <code>PackageName</code>, <code>EventTimeMillis</code>, and a pointer to <code>SubscriptionNotification</code>.
+    </li>
+    <li>
+        <b>SubscriptionNotification struct</b><br>
+        - Added fields <code>Version</code>, <code>NotificationType</code>, <code>PurchaseToken</code>, and <code>SubscriptionId</code>.
+    </li>
+    <li>
+        <b>SubscriptionPurchase & nested types</b><br>
+        - Defined <code>SubscriptionPurchase</code> with all relevant Google V2 fields.<br>
+        - Introduced <code>SubscriptionPurchaseLineItem</code>, <code>AutoRenewingPlan</code>, and <code>SubscriptionOfferDetails</code> to capture expiry times and offer metadata.
+    </li>
+    <li>
+        <b>Pointer usage for nullables</b><br>
+        - Ensured all optional/nullable JSON fields (e.g. <code>OfferID</code>, <code>FreeTrial</code>) are represented as Go pointers, preserving the distinction between “absent” and zero‐value.
+    </li>
+    <li>
+        <b>Comments for clarity</b><br>
+        - Annotated Android‐only vs iOS‐only fields inline, matching the PHP and docs for maintainability.
+    </li>
+</ul>
+
+<h2>🧪 Testing</h2>
+<ul>
+    <li>Ran <code>go_test -v ./...</code> to verify no regressions.</li>
+    <li>All existing tests (Apple, Google handler stubs, lookup data, forwarders, segment payloads) pass.</li>
+    <li>No new tests were required for struct definitions—DTOs are ready for the next decoding & mapping phase.</li>
+</ul>
+
+<h2>📘 Conclusion</h2>
+<p>
+    The Google subscription DTOs are now fully defined in Go, aligned with the shared S2S Notifications
+    Common model and PHP classes. With the payload structs in place and tests green, we’re ready to
+    implement <code>decodeGoogleWebhook</code> and wire up the Google handling logic.
+</p>
+
+</body>
+</html>
