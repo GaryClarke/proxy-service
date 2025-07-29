@@ -32,7 +32,7 @@ func (h *AppleHandler) supports(wh webhook.Webhook) bool {
 }
 
 func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
-	sub, err := decodeSubscriptionWebhook(wh.Payload)
+	sub, err := decodeAppleWebhook(wh.Payload)
 	if err != nil {
 		return err
 	}
@@ -58,10 +58,10 @@ func (h *AppleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 	return nil
 }
 
-// decodeSubscriptionWebhook decodes the inner JSON payload into a Subscription.
+// decodeAppleWebhook decodes the inner JSON payload into a Subscription.
 // It expects the payload string to be in the format:
 // {"payload": {"subscription": { ... }}}
-func decodeSubscriptionWebhook(payload string) (*subnotes.Subscription, error) {
+func decodeAppleWebhook(payload string) (*subnotes.Subscription, error) {
 	var innerPayload subnotes.SubscriptionPayload
 	if err := json.Unmarshal([]byte(payload), &innerPayload); err != nil {
 		return nil, fmt.Errorf("the subscription payload could not be decoded. Reason: %w", err)
