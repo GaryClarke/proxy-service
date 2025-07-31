@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 67-decode-google-payload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>67-decode-google-payload</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Flesh out the Google webhook handler by implementing <code>decodeGoogleWebhook</code> to mirror the PHP decoder logic:
+    unmarshal the raw payload, map the brand, sort line items by expiry, extract the auto-renew flag, and return a fully populated subscription.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <code>internal/webhook/handler/google.go</code>
+        <ul>
+            <li>Added stub <code>decodeGoogleWebhook(payload string) (*subnotes.Subscription, error)</code> with TODO scaffolding.</li>
+            <li>Hooked it into <code>GoogleHandler.handle</code> to drive via the existing <code>TestWebhookHandler_GoogleScenarios</code> feature test.</li>
+        </ul>
+    </li>
+    <li>
+        Implemented step-by-step decoding inside <code>decodeGoogleWebhook</code>:
+        <pre><code>var innerPayload subnotes.SubscriptionPayload
+if err := json.Unmarshal([]byte(payload), &innerPayload); err != nil {
+    return nil, fmt.Errorf("the subscription payload could not be decoded. Reason: %w", err)
+}
+</code></pre>
+    </li>
+    <li>
+        Mapped platform brand:
+        <pre><code>brandValue, err := brand.FromPlatformBrandID(innerPayload.Payload.Subscription.DeveloperNotification.PackageName)
+innerPayload.Payload.Subscription.Brand = brandValue
+</code></pre>
+    </li>
+    <li>
+        Sorted <code>SubscriptionPurchase.LineItems</code> in descending expiry order using <code>sort.Slice</code> and <code>time.Parse(time.RFC3339,…)</code>.
+    </li>
+    <li>
+        Populated <code>SubscriptionPurchase.AutoRenewing</code> from the first (newest) line item, with a safe <code>false</code> fallback.
+    </li>
+    <li>
+        Used <code>debug.DD</code> dumps during development to verify intermediate structs, then removed them to allow the handler to return <code>204 No Content</code>.
+    </li>
+</ul>
+
+<h2>🧪 Testing & Validation</h2>
+<ul>
+    <li>Ran <code>TestWebhookHandler_GoogleScenarios</code> with debug dumps to confirm:</li>
+    <ol>
+        <li>Inner payload unmarshal structure</li>
+        <li>Brand code resolution (“gf”)</li>
+        <li>Correct line-item ordering and auto-renew extraction</li>
+    </ol>
+    <li>Removed dumps and verified final <code>go_test -run '^TestWebhookHandler_GoogleScenarios$'</code> returns <code>204 No Content</code>.</li>
+</ul>
+
+</body>
+</html>
