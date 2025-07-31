@@ -42,6 +42,7 @@ type SubscriptionPurchase struct {
 	PurchaseToken      string                         `json:"purchaseToken"`
 	Acknowledged       bool                           `json:"acknowledged"`
 	LineItems          []SubscriptionPurchaseLineItem `json:"lineItems"`
+	AutoRenewing       bool                           `json:"autoRenewing"`
 }
 
 // SubscriptionPurchaseLineItem represents each element in the lineItems array.
