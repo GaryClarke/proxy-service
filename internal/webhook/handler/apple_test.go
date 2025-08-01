@@ -39,7 +39,7 @@ func TestAppleHandler_Supports(t *testing.T) {
 
 func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {
 	// Build a valid payload using the shared test utility function.
-	payload := testutil.BuildSubNotesPayload(
+	payload := testutil.BuildAppleInnerPayload(
 		"SUBSCRIBED",
 		"INITIAL_BUY",
 		"100000123456789",
