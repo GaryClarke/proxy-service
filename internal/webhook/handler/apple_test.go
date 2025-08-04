@@ -37,7 +37,7 @@ func TestAppleHandler_Supports(t *testing.T) {
 	}
 }
 
-func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {
+func TestDecodeAppleWebhook_ValidPayload(t *testing.T) {
 	// Build a valid payload using the shared test utility function.
 	payload := testutil.BuildAppleInnerPayload(
 		"SUBSCRIBED",
@@ -76,7 +76,7 @@ func TestDecodeSubscriptionWebhook_ValidPayload(t *testing.T) {
 	assert.Equal(t, "INITIAL_BUY", *sub.ServerData.SubType)
 }
 
-func TestDecodeSubscriptionWebhook_InvalidPayload(t *testing.T) {
+func TestDecodeAppleWebhook_InvalidPayload(t *testing.T) {
 	invalidPayload := `{"invalid": "data"}`
 	_, err := decodeAppleWebhook(invalidPayload)
 	if err == nil {

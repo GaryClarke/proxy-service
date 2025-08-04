@@ -50,31 +50,41 @@ func decodeGoogleWebhook(payload string) (*subnotes.Subscription, error) {
 		return nil, fmt.Errorf("the subscription payload could not be decoded. Reason: %w", err)
 	}
 
-	brandValue, err := brand.FromPlatformBrandID(innerPayload.Payload.Subscription.DeveloperNotification.PackageName)
+	// grab a pointer to make later code cleaner
+	sub := &innerPayload.Payload.Subscription
+
+	// --- nil‐guard the required blocks ---
+	if sub.DeveloperNotification == nil {
+		return nil, fmt.Errorf("invalid Google payload: missing developerNotification")
+	}
+	if sub.SubscriptionPurchase == nil {
+		return nil, fmt.Errorf("invalid Google payload: missing subscriptionPurchase")
+	}
+
+	// now safe to map brand
+	brandValue, err := brand.FromPlatformBrandID(sub.DeveloperNotification.PackageName)
 	if err != nil {
 		return nil, fmt.Errorf("invalid brand in Google payload: %w", err)
 	}
-	innerPayload.Payload.Subscription.Brand = brandValue
+	sub.Brand = brandValue
 
-	items := innerPayload.Payload.Subscription.SubscriptionPurchase.LineItems
-	// sort line items descending by expiry time (i.e. latest first)
+	// extract and sort line items...
+	items := sub.SubscriptionPurchase.LineItems
 	sort.Slice(items, func(i, j int) bool {
 		ti, err1 := time.Parse(time.RFC3339, items[i].ExpiryTime)
 		tj, err2 := time.Parse(time.RFC3339, items[j].ExpiryTime)
 		if err1 != nil || err2 != nil {
-			// fallback to lexicographical
 			return items[i].ExpiryTime > items[j].ExpiryTime
 		}
 		return ti.After(tj)
 	})
 
-	// Now populate the new field:
+	// pick top item or default
 	if len(items) > 0 {
-		innerPayload.Payload.Subscription.SubscriptionPurchase.AutoRenewing =
-			items[0].AutoRenewingPlan.AutoRenewEnabled
+		sub.SubscriptionPurchase.AutoRenewing = items[0].AutoRenewingPlan.AutoRenewEnabled
 	} else {
-		innerPayload.Payload.Subscription.SubscriptionPurchase.AutoRenewing = false
+		sub.SubscriptionPurchase.AutoRenewing = false
 	}
 
-	return &innerPayload.Payload.Subscription, nil
+	return sub, nil
 }

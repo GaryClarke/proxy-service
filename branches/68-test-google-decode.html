@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 68-test-google-decode</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>68-test-google-decode</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Add and validate unit tests for the new <code>decodeGoogleWebhook</code> function to ensure robust parsing of Google RTDN payloads before implementing full handler logic.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <code>internal/webhook/handler/google.go</code> &mdash; Implemented <code>decodeGoogleWebhook</code> to:
+        <ul>
+            <li>Unmarshal inner JSON into <code>subnotes.SubscriptionPayload</code>.</li>
+            <li>Map <code>DeveloperNotification.PackageName</code> to <code>Subscription.Brand</code>.</li>
+            <li>Sort <code>SubscriptionPurchase.LineItems</code> by expiry descending.</li>
+            <li>Set <code>SubscriptionPurchase.AutoRenewing</code> based on the latest line item (defaulting to <code>false</code>).</li>
+        </ul>
+    </li>
+    <li>
+        <code>internal/webhook/handler/google_test.go</code> &mdash; Added:
+        <ul>
+            <li><code>TestDecodeGoogleWebhook_ValidPayload</code> to verify correct struct population.</li>
+            <li><code>TestDecodeGoogleWebhook_InvalidPayload</code> to assert JSON unmarshal errors.</li>
+        </ul>
+    </li>
+    <li>
+        <code>internal/testutil/payload.go</code> &mdash; Introduced <code>BuildGoogleInnerPayload</code> helper for generating Google-specific test payloads, mirroring the Apple utility.
+    </li>
+    <li>
+        Renamed and consolidated Apple test helpers to <code>BuildAppleInnerPayload</code> in <code>internal/testutil</code> to maintain consistency.
+    </li>
+    <li>
+        Updated <code>cmd/api/handlers_test.go</code> to remove temporary <code>debug.DD</code> dumps and rely on <code>decodeGoogleWebhook</code> output.
+    </li>
+</ul>
+
+<h2>🧪 Testing</h2>
+<p>
+    Run the new Google decoding tests in isolation with:
+</p>
+<pre><code>go test ./internal/webhook/handler -run '^TestDecodeGoogleWebhook_'</code></pre>
+<p>
+    All existing Apple decoding tests and end-to-end webhook handler tests continue to pass, confirming no regressions.
+</p>
+
+<h2>📘 Conclusion</h2>
+<p>
+    With these tests in place, our Google payload decoding logic is verified. We now have a solid foundation to build the full GoogleHandler implementation, confident that raw JSON will be normalized correctly.
+</p>
+
+</body>
+</html>
