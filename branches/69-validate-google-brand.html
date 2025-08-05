@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 69-validate-google-brand</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>69-validate-google-brand</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Ensure that incoming Google subscription payloads include only recognized brands by invoking our central brand validation in the Google webhook handler.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <code>internal/webhook/handler/google.go</code> &mdash; Extended <code>GoogleHandler.handle</code> to:
+        <pre><code>sub, err := decodeGoogleWebhook(wh.Payload)
+if err != nil {
+    return err
+}
+if err = brand.ValidateBrand(sub.Brand); err != nil {
+    return err
+}
+// …</code></pre>
+        This matches the Apple handler’s approach, preventing processing of unrecognized brands.
+    </li>
+    <li>
+        No changes to existing tests; all Google and Apple handler tests continue to pass unmodified.
+    </li>
+</ul>
+
+<h2>🧪 Testing</h2>
+<p>
+    Verify that the Google handler still responds <code>204 No Content</code> for valid brands and rejects invalid ones:
+</p>
+<pre><code>go test ./cmd/api -run '^TestWebhookHandler_GoogleScenarios$'</code></pre>
+<p>
+    All existing coverage remains green.
+</p>
+
+<h2>📘 Conclusion</h2>
+<p>
+    With brand validation now in place, our Google webhook handler upholds the same data integrity safeguards as Apple, ready for the next step of event creation and forwarding.
+</p>
+
+</body>
+</html>

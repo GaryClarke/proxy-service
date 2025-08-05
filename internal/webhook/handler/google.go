@@ -26,12 +26,16 @@ func (h *GoogleHandler) supports(wh webhook.Webhook) bool {
 }
 
 func (h *GoogleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
-	_, err := decodeGoogleWebhook(wh.Payload)
+	sub, err := decodeGoogleWebhook(wh.Payload)
 	if err != nil {
 		return err
 	}
-	// todo validate brand
-	// todo create event(s)
+	if err = brand.ValidateBrand(sub.Brand); err != nil {
+		return err
+	}
+	// todo create subscription event
+	// todo create change event
+
 	// todo forward event(s)
 
 	return nil
