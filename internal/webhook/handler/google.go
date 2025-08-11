@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/garyclarke/proxy-service/internal/brand"
+	"github.com/garyclarke/proxy-service/internal/debug"
+	"github.com/garyclarke/proxy-service/internal/event"
 	"github.com/garyclarke/proxy-service/internal/webhook"
 	"github.com/garyclarke/proxy-service/internal/webhook/dto/subnotes"
 	"sort"
@@ -12,6 +14,19 @@ import (
 )
 
 const GoogleNotification = "GoogleIAPNotification"
+
+// notification codes from Google → human‐readable names matching our lookup JSON keys
+var googleCodeToName = map[int]string{
+	1:  "RECOVERED",
+	2:  "RENEWED",
+	3:  "CANCELLED",
+	4:  "PURCHASED",
+	5:  "ON_HOLD",
+	7:  "RESTARTED",
+	10: "PAUSED",
+	12: "REVOKED",
+	13: "EXPIRED",
+}
 
 // GoogleHandler is a placeholder for Google RTDN support.
 type GoogleHandler struct{}
@@ -34,6 +49,11 @@ func (h *GoogleHandler) handle(ctx context.Context, wh webhook.Webhook) error {
 		return err
 	}
 	// todo create subscription event
+	subEvent, err := createGoogleEvent(sub)
+	if err != nil {
+		return err
+	}
+	debug.DD(subEvent)
 	// todo create change event
 
 	// todo forward event(s)
@@ -60,6 +80,9 @@ func decodeGoogleWebhook(payload string) (*subnotes.Subscription, error) {
 	// --- nil‐guard the required blocks ---
 	if sub.DeveloperNotification == nil {
 		return nil, fmt.Errorf("invalid Google payload: missing developerNotification")
+	}
+	if sub.DeveloperNotification.SubscriptionNotification == nil {
+		return nil, fmt.Errorf("invalid Google payload: missing subscriptionNotification")
 	}
 	if sub.SubscriptionPurchase == nil {
 		return nil, fmt.Errorf("invalid Google payload: missing subscriptionPurchase")
@@ -91,4 +114,79 @@ func decodeGoogleWebhook(payload string) (*subnotes.Subscription, error) {
 	}
 
 	return sub, nil
+}
+
+func createGoogleEvent(sub *subnotes.Subscription) (*event.SubscriptionEvent, error) {
+	// 1. Retrieve the lookup map for Google events.
+	lookupMap, err := event.GetLookupData("google")
+	if err != nil {
+		return nil, err
+	}
+	// 2. Resolve via composite key
+	subEvent, err := resolveGoogleSubscriptionEvent(sub, lookupMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach the decoded subscription to the subEvent definition.
+	subEvent.Subscription = sub
+
+	return subEvent, err
+}
+
+// resolveGoogleSubscriptionEvent returns the first matching event from the lookup map.
+func resolveGoogleSubscriptionEvent(
+	sub *subnotes.Subscription,
+	lookupMap map[string]event.SubscriptionEvent,
+) (*event.SubscriptionEvent, error) {
+	candidates := googleCompositeKeyCandidates(sub)
+
+	for _, key := range candidates {
+		if subEvent, ok := lookupMap[key]; ok {
+			// Create a copy of subEvent so we can return its address.
+			//
+			// In Go, when you retrieve a value from a map (e.g. "subEvent := lookupMap[key]"),
+			// the returned value is not "addressable." This means you cannot take its address
+			// directly (i.e. you cannot write &lookupMap[key] or &subEvent).
+			// The value is a copy and does not have a stable memory address you can refer to.
+			//
+			// To work around this, we assign the value to a local variable (eventCopy).
+			// This local variable is addressable, so we can take its address (i.e. &eventCopy)
+			// and return a pointer to it.
+
+			// Copy so we can take a stable address
+			eventCopy := subEvent
+			return &eventCopy, nil
+		}
+	}
+
+	return nil, fmt.Errorf(
+		"no valid Google subscription event found for notificationType=%d inTrial=%t",
+		sub.DeveloperNotification.SubscriptionNotification.NotificationType,
+		sub.Properties.PromotionalOfferApplied,
+	)
+}
+
+// googleCompositeKeyCandidates builds the lookup keys for a Google subscription.
+// It uses the NotificationType code → name mapping, and the in_trial flag.
+// Fallback order:
+//  1. "<NAME>|null|<true|false>"
+//  2. "<NAME>|null|null"
+func googleCompositeKeyCandidates(sub *subnotes.Subscription) []string {
+	notifCode := sub.DeveloperNotification.
+		SubscriptionNotification.
+		NotificationType
+
+	// map code to the string used in google.json; fall back to the raw code if missing
+	notifName, ok := googleCodeToName[notifCode]
+	if !ok {
+		notifName = fmt.Sprintf("%d", notifCode)
+	}
+
+	inTrial := sub.Properties.PromotionalOfferApplied
+
+	return []string{
+		fmt.Sprintf("%s|null|%t", notifName, inTrial),
+		fmt.Sprintf("%s|null|null", notifName),
+	}
 }

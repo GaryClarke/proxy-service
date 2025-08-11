@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: 70-create-google-event</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>70-create-google-event</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Implement Google subscription event creation (parity with Apple): load lookup → resolve event via composite key → <strong>attach subscription</strong> → (later) forward.
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <strong>createGoogleEvent</strong> in <code>internal/webhook/handler/google.go</code>:
+        <pre><code>lookupMap, _ := event.GetLookupData("google")
+subEvent, _ := resolveGoogleSubscriptionEvent(sub, lookupMap)
+subEvent.Subscription = sub
+return subEvent</code></pre>
+        <em>Note:</em> Explicitly attaches the decoded <code>sub</code> for downstream forwarders.
+    </li>
+    <li>
+        <strong>Composite key logic</strong>:
+        <ul>
+            <li><code>googleCompositeKeyCandidates</code> builds keys from <code>notificationType</code> (via code→name mapping) and <code>inTrial</code>:
+                <code>PURCHASED|null|false</code> → fallback → <code>PURCHASED|null|null</code>.
+            </li>
+            <li><code>resolveGoogleSubscriptionEvent</code> iterates candidates and returns the first match.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Handler wiring</strong>: <code>GoogleHandler.handle</code> now decodes, validates brand, creates the subscription event, and keeps it ready for forwarding.
+    </li>
+</ul>
+
+<h2>📝 Notes & Next Steps</h2>
+<ul>
+    <li>Readable lookup keys retained via code→name mapping (e.g., <code>4</code> → <code>PURCHASED</code>).</li>
+    <li>Next: add any “change” events and wire Segment forwarders.</li>
+    <li>Remove temporary dumps once end-to-end tests are green.</li>
+</ul>
+
+</body>
+</html>

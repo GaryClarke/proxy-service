@@ -100,6 +100,31 @@ func createAppleEvent(sub *subnotes.Subscription) (*event.SubscriptionEvent, err
 	return subEvent, nil
 }
 
+// resolveAppleSubscriptionEvent returns the first matching SubscriptionEvent from the lookup map.
+func resolveAppleSubscriptionEvent(
+	sub *subnotes.Subscription,
+	lookupMap map[string]event.SubscriptionEvent,
+) (*event.SubscriptionEvent, error) {
+	candidates := appleCompositeKeyCandidates(sub)
+	for _, key := range candidates {
+		if subEvent, ok := lookupMap[key]; ok {
+			// Create a copy of subEvent so we can return its address.
+			//
+			// In Go, when you retrieve a value from a map (e.g. "subEvent := lookupMap[key]"),
+			// the returned value is not "addressable." This means you cannot take its address
+			// directly (i.e. you cannot write &lookupMap[key] or &subEvent).
+			// The value is a copy and does not have a stable memory address you can refer to.
+			//
+			// To work around this, we assign the value to a local variable (eventCopy).
+			// This local variable is addressable, so we can take its address (i.e. &eventCopy)
+			// and return a pointer to it.
+			eventCopy := subEvent
+			return &eventCopy, nil
+		}
+	}
+	return nil, fmt.Errorf("no valid composite event found for subscription")
+}
+
 // appleCompositeKeyCandidates generates a slice of candidate composite keys
 // for resolving an Apple subscription event from the given subscription data.
 // The composite key is constructed using the notification type (converted to uppercase),
@@ -127,29 +152,4 @@ func appleCompositeKeyCandidates(sub *subnotes.Subscription) []string {
 		fmt.Sprintf("%s|%s|null", notifType, specificSubType),
 		fmt.Sprintf("%s|null|null", notifType),
 	}
-}
-
-// resolveAppleSubscriptionEvent returns the first matching SubscriptionEvent from the lookup map.
-func resolveAppleSubscriptionEvent(
-	sub *subnotes.Subscription,
-	lookupMap map[string]event.SubscriptionEvent,
-) (*event.SubscriptionEvent, error) {
-	candidates := appleCompositeKeyCandidates(sub)
-	for _, key := range candidates {
-		if subEvent, ok := lookupMap[key]; ok {
-			// Create a copy of subEvent so we can return its address.
-			//
-			// In Go, when you retrieve a value from a map (e.g. "subEvent := lookupMap[key]"),
-			// the returned value is not "addressable." This means you cannot take its address
-			// directly (i.e. you cannot write &lookupMap[key] or &subEvent).
-			// The value is a copy and does not have a stable memory address you can refer to.
-			//
-			// To work around this, we assign the value to a local variable (eventCopy).
-			// This local variable is addressable, so we can take its address (i.e. &eventCopy)
-			// and return a pointer to it.
-			eventCopy := subEvent
-			return &eventCopy, nil
-		}
-	}
-	return nil, fmt.Errorf("no valid composite event found for subscription")
 }
