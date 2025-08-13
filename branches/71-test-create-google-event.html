@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Branch Summary: <code>71-test-create-google-event</code></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; line-height: 1.6; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-left: 4px solid #ccc; overflow-x: auto; }
+        ul { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<h1>✅ Branch Summary: <code>71-test-create-google-event</code></h1>
+
+<h2>📌 Purpose</h2>
+<p>
+    Add unit coverage for Google subscription <em>event creation</em> and <em>resolver fallback</em> logic, mirroring the
+    Apple test suite while accounting for Google’s composite key format
+    (<code>&lt;NAME&gt;|null|&lt;in_trial&gt;</code> → fallback to <code>&lt;NAME&gt;|null|null</code>).
+</p>
+
+<h2>🔑 Key Changes</h2>
+<ul>
+    <li>
+        <b>TestCreateGoogleEvent_Success</b><br>
+        - Builds a minimal Google <code>Subscription</code> with <code>NotificationType: 4</code> (PURCHASED) and <code>in_trial: true</code>.<br>
+        - Calls <code>createGoogleEvent</code> (uses real <code>lookup/google.json</code>).<br>
+        - Asserts: <code>Name=subscription_started</code>, <code>SubStatus="First time subscriber"</code>, <code>Category=CATEGORY_START</code>,
+        <code>NotificationType=4</code> (checked with <code>assert.EqualValues</code>), <code>SubType=nil</code>, and that the original
+        <code>Subscription</code> is attached.
+    </li>
+    <li>
+        <b>TestCreateGoogleEvent_NoMatch</b><br>
+        - Uses unknown <code>NotificationType: 9999</code> and expects an error from <code>createGoogleEvent</code>
+        (no matching composite key in the lookup).
+    </li>
+    <li>
+        <b>TestResolveGoogleSubscriptionEvent</b><br>
+        - Employs a <em>fake</em> lookup map to verify resolver behavior:<br>
+        - Exact match: <code>PURCHASED|null|true</code> → <code>subscription_started_trial</code>.<br>
+        - Exact match: <code>PURCHASED|null|false</code> → <code>subscription_started</code>.<br>
+        - Fallback: only <code>RENEWED|null|null</code> exists → resolves generic <code>subscription_renewed_generic</code> for any <code>in_trial</code>.<br>
+        - Error path: <code>NotificationType: 9999</code> → no match found.
+    </li>
+    <li>
+        <b>Type handling</b><br>
+        - Adopted <code>assert.EqualValues</code> for <code>NotificationType</code> since JSON numbers unmarshal as <code>float64</code> into
+        <code>interface{}</code>.
+    </li>
+</ul>
+
+<h2>🧪 Testing</h2>
+<ul>
+    <li>Ran <code>go test -v ./...</code>; all three new tests pass alongside existing suites.</li>
+    <li>Verified composite key generation (code → name mapping, e.g., <code>4 → PURCHASED</code>) and specific→generic fallback.</li>
+</ul>
+
+<h2>📘 Conclusion</h2>
+<p>
+    Google event creation and resolver logic are now covered by focused unit tests, achieving parity with the Apple
+    tests while reflecting Google’s lookup shape. With these guards in place, we’re set to implement and wire the
+    Google forwarders (Identify + Track) with confidence.
+</p>
+
+</body>
+</html>
