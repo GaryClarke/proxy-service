@@ -6,3 +6,4 @@ tmp
 .air.toml
 http-client.env.json
 proxy-service
+requests.http

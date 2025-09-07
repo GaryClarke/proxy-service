@@ -1,6 +1,6 @@
 # Proxy-Service
 
-A small Go service that normalizes Apple and Google subscription webhooks into canonical event types and forwards Identify/Track analytics to Twilio Segment. It handles both platforms uniformly.  
+A Go service that normalizes Apple and Google subscription webhooks into canonical event types and forwards Identify/Track analytics to Twilio Segment. It handles both platforms uniformly.  
 
 > **Why this exists:**  
 > - **Learning exercise:** build something real in Go, step by step, and compare the developer experience with PHP/Node.  
@@ -33,7 +33,7 @@ The service accepts a normalized webhook, resolves it to a canonical event, and 
 
 ### Prerequisites
 
-- Go **1.23+**  
+- Go **1.23.x** (see `go.mod`)
 - Git
 
 ### Clone & Build
