@@ -1,31 +1,35 @@
 # Proxy-Service
 
-A small Go microservice for proxying Apple & Google subscription webhooks into Segment Identify & Track calls.  
+A small Go service that normalizes Apple and Google subscription webhooks into canonical event types and forwards Identify/Track analytics to Twilio Segment. It handles both platforms uniformly.  
 
 > **Why this exists:**  
-> - **Learning exercise** — build something real in Go, step by step, and compare the developer experience with PHP/Node.  
-> - **Discovery project** — explore Go’s strengths (static typing, concurrency, binary delivery, standard library) versus dynamic platforms.
+> - **Learning exercise:** build something real in Go, step by step, and compare the developer experience with PHP/Node.  
+> - **Discovery project:** explore Go’s strengths (static typing, concurrency, binary delivery, standard library).
 
 ---
 
-## 🚀 Features
+## How this works
 
-- **Healthcheck** endpoint (`GET /healthcheck`)  
-- **Robust JSON parsing** (`readJSON`) with:
-  - size limits (1 MB)
-  - `DisallowUnknownFields`
-  - precise errors for syntax, type, unknown keys, empty/multiple values
-- **Error helpers**: `errorResponse` & `serverErrorResponse` send consistent JSON errors  
-- **Panic-recovery middleware** to keep the server alive and return `500` on unexpected panics  
-- **Pluggable handler/delegator** pattern for multiple webhook types  
-- **“DD” debug helper** (`debug.DD(...)`) to dump & halt anywhere  
-- **Apple subscription-start flow** wired end-to-end:  
-  - decode incoming JSON → map → Segment Identify + Track  
-  - full test coverage
+The service accepts a normalized webhook, resolves it to a canonical event, and forwards Identify/Track analytics to Twilio Segment. Both Apple and Google follow the same flow.
+
+
+**At a glance**
+
+1. `POST /webhook` receives a normalized subscription payload.
+2. A delegator routes to the Apple or Google handler using a simple `supports(...)` check.
+3. The handler decodes into `subnotes.Subscription`, validates brand, and resolves a canonical `SubscriptionEvent` using a lookup table.
+4. Forwarders build and send Segment Identify + Track messages.
 
 ---
 
-## 🎯 Getting Started
+### Service Orientation
+
+
+![Proxy Service orientation](docs/webhooks-proxy-segment-dark.png)
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
@@ -42,7 +46,7 @@ go build -o proxy-service ./cmd/api
 
 ### Environment
 
-By default the app reads `.env` (via [`joho/godotenv`](https://github.com/joho/godotenv)). You can also pass flags:
+By default the app reads `.env`. You can also pass flags:
 
 ```bash
 export PORT=4000
@@ -67,19 +71,7 @@ Or with flags:
 
 ---
 
-## 🔧 Configuration
-
-| Env / Flag                                        | Default                              | Description                      |         |              |
-| ------------------------------------------------- | ------------------------------------ | -------------------------------- | ------- | ------------ |
-| `PORT` / `-port`                                  | `4000`                               | HTTP listen port                 |         |              |
-| `ENV` / `-env`                                    | `development`                        | Environment: \`development       | staging | production\` |
-| `DEBUG` / `-debug`                                | `false`                              | Enable debug-mode header logging |         |              |
-| `SEGMENT_SUBSCRIPTION_WRITE_KEY` / `-segment-key` | **REQUIRED**                         | Segment write key                |         |              |
-| `SEGMENT_ENDPOINT` / `-segment-endpoint`          | `https://events.eu1.segmentapis.com` | Segment API endpoint             |         |              |
-
----
-
-## 🧪 Testing
+## Testing
 
 Run all tests:
 
@@ -89,31 +81,34 @@ go test ./...
 
 Key test packages:
 
-* **`cmd/api/helpers_test.go`** — writeJSON & readJSON
-* **`cmd/api/middleware_test.go`** — panic-recovery middleware
-* **`internal/webhook/handler/handler_test.go`** — delegator & handlers
-* **`internal/event/forwarder`** — mapping raw DTO → Identify/Track payloads
-* **`internal/segment/identify`** & **`/track`** — payload builders
+* **`cmd/api/helpers_test.go`** writeJSON & readJSON
+* **`cmd/api/middleware_test.go`** panic-recovery middleware
+* **`internal/webhook/handler/handler_test.go`** delegator & handlers
+* **`internal/event/forwarder`** mapping raw DTO → Identify/Track payloads
+* **`internal/segment/identify`** & **`/track`** payload builders
 
 ---
 
-## 🌿 Branches
+## Branch summaries (build log)
 
-We built this service **incrementally** — each branch adds one feature:
+This project was built incrementally. To see the story of how it came together, browse the **`branch-summaries/`** folder. Each branch has a short, structured HTML summary that’s richer than a commit message.
 
-1. `1-project-setup`
-2. `2-webhook-model`
-3. `3-basic-handlers`
-4. `4-delegator`
-   …
-5. `62-add-track-assertions-to-apple-webhook-tests`
-6. `63-add-debug-dump-helper`
+What you’ll find in each summary:
 
-Inspect the `branches/` folder for diffs & detailed notes.
+* **Purpose & context** - why the branch exists and what problem it solves.
+* **Key changes** - the important code edits with just enough detail to follow along.
+* **Decisions & trade-offs** - reasoning, alternatives considered, and why a path was chosen.
+* **Testing results** - what was validated and how.
+* **Next steps** - what’s intentionally left for the following branch.
+
+How to read it:
+
+* Start at the lowest numbered branches and move forward (e.g. `66-google-subscription-structs` → `71-test-create-google-event` → `72-google-status-change-event`).
+* Use the summaries as a narrative guide; commits are snapshots, **summaries are the storyboard**.
 
 ---
 
-## 🛠️ Debugging & Instrumentation
+## Debugging & Instrumentation
 
 * **Live-reload** with [air](https://github.com/cosmtrek/air)
 
@@ -121,12 +116,14 @@ Inspect the `branches/` folder for diffs & detailed notes.
 
 * **Debug-dump** anywhere with:
 
-  ```go
-  import "github.com/garyclarke/proxy-service/debug"
-  …
-  debug.DD(foo, bar)
-  // → prints to stdout + panics to halt the request
-  ```
+```go
+package main
+
+import "github.com/garyclarke/proxy-service/debug"
+// …
+debug.DD(foo, bar)
+// → prints to stdout + panics to halt the request
+```
 
 * **Header logging** in debug mode (`app.logHeaders`)
 
